@@ -16,7 +16,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/reports")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"})
 public class AnimalReportController {
     
     @Autowired
@@ -24,6 +23,7 @@ public class AnimalReportController {
     
     @PostMapping
     public ResponseEntity<ReportResponse> createReport(@Valid @RequestBody ReportRequest request) {
+        System.out.println("working--------------------------------------------------");
         ReportResponse response = reportService.createReport(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

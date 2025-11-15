@@ -46,7 +46,8 @@ Authorization: Bearer <your-jwt-token>
 ## Authentication APIs
 
 ### 1. User Registration
-**POST** `/auth/signup`
+**POST** `
+`
 
 Registers a new user in the system. **No authentication required.**
 
@@ -532,11 +533,11 @@ Creates a new animal rescue report. **No authentication required.**
 ```json
 {
   "animalType": "Dog",
+  "condition": "Injured",
   "injuryDescription": "Injured leg, bleeding",
   "additionalNotes": "Found near main road",
   "latitude": 18.5204,
   "longitude": 73.8567,
-  "address": "Pune, Maharashtra",
   "imageUrls": ["url1", "url2"],
   "reporterName": "John Doe",
   "reporterPhone": "+91-9876543210",

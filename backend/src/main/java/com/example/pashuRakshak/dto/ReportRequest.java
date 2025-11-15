@@ -9,6 +9,9 @@ public class ReportRequest {
     @NotBlank(message = "Animal type is required")
     private String animalType;
     
+    @NotBlank(message = "Condition is required")
+    private String condition;
+    
     @NotBlank(message = "Injury description is required")
     private String injuryDescription;
     
@@ -19,8 +22,6 @@ public class ReportRequest {
     
     @NotNull(message = "Longitude is required")
     private Double longitude;
-    
-    private String address;
     
     private List<String> imageUrls;
     
@@ -35,6 +36,9 @@ public class ReportRequest {
     public String getAnimalType() { return animalType; }
     public void setAnimalType(String animalType) { this.animalType = animalType; }
     
+    public String getCondition() { return condition; }
+    public void setCondition(String condition) { this.condition = condition; }
+    
     public String getInjuryDescription() { return injuryDescription; }
     public void setInjuryDescription(String injuryDescription) { this.injuryDescription = injuryDescription; }
     
@@ -46,9 +50,6 @@ public class ReportRequest {
     
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }
-    
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
     
     public List<String> getImageUrls() { return imageUrls; }
     public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }

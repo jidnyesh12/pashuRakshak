@@ -24,11 +24,11 @@ public class AnimalReportService {
         AnimalReport report = new AnimalReport();
         report.setTrackingId(generateTrackingId());
         report.setAnimalType(request.getAnimalType());
+        report.setCondition(request.getCondition());
         report.setInjuryDescription(request.getInjuryDescription());
         report.setAdditionalNotes(request.getAdditionalNotes());
         report.setLatitude(request.getLatitude());
         report.setLongitude(request.getLongitude());
-        report.setAddress(request.getAddress());
         report.setImageUrls(request.getImageUrls());
         report.setReporterName(request.getReporterName());
         report.setReporterPhone(request.getReporterPhone());
@@ -141,11 +141,11 @@ public class AnimalReportService {
         response.setId(report.getId());
         response.setTrackingId(report.getTrackingId());
         response.setAnimalType(report.getAnimalType());
+        response.setCondition(report.getCondition());
         response.setInjuryDescription(report.getInjuryDescription());
         response.setAdditionalNotes(report.getAdditionalNotes());
         response.setLatitude(report.getLatitude());
         response.setLongitude(report.getLongitude());
-        response.setAddress(report.getAddress());
         response.setImageUrls(report.getImageUrls());
         response.setStatus(report.getStatus());
         response.setReporterName(report.getReporterName());

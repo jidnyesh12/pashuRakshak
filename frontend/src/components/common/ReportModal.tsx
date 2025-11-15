@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { X, MapPin, AlertTriangle, Save } from 'lucide-react';
+import { X, MapPin, Save } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { reportsAPI } from '../../utils/api';
 import LoadingSpinner from './LoadingSpinner';
 import toast from 'react-hot-toast';
 import type { ReportRequest } from '../../types';
+// import { reverseGeocode } from '../../utils/location'; // Removed import
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -14,16 +15,29 @@ interface ReportModalProps {
 
 const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
-  const { register, handleSubmit, formState: { errors }, watch, reset } = useForm<ReportRequest>();
+  const { register, handleSubmit, formState: { errors }, watch, reset, setValue } = useForm<ReportRequest>();
 
-  const urgencyLevel = watch('urgencyLevel');
+  // const urgencyLevel = watch('urgencyLevel'); // Removed
 
   const onSubmit = async (data: ReportRequest) => {
     setLoading(true);
     try {
       const report = await reportsAPI.createReport(data);
       toast.success(`Report submitted successfully! Tracking ID: ${report.trackingId}`);
-      reset();
+      reset({ 
+        animalType: '', 
+        condition: '', 
+        // urgencyLevel: '', // Removed
+        description: '', 
+        injuryDescription: '',
+        additionalNotes: '',
+        latitude: 0, 
+        longitude: 0,
+        imageUrls: [],
+        reporterName: '', 
+        reporterPhone: '',
+        reporterEmail: ''
+      });
       onClose();
       if (onSuccess) {
         onSuccess(report.trackingId);
@@ -39,9 +53,12 @@ const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSuccess })
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          setValue('latitude', latitude);
+          setValue('longitude', longitude);
+          
           toast.success('Location detected successfully');
-          // You could use reverse geocoding here to get address
         },
         (error) => {
           toast.error('Unable to get your location');
@@ -117,67 +134,46 @@ const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSuccess })
             </div>
           </div>
 
-          {/* Urgency Level */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Urgency Level *
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {['LOW', 'MEDIUM', 'HIGH'].map((level) => (
-                <label key={level} className="relative">
-                  <input
-                    type="radio"
-                    value={level}
-                    className="sr-only"
-                    {...register('urgencyLevel', { required: 'Urgency level is required' })}
-                  />
-                  <div className={`p-3 border-2 rounded-lg cursor-pointer text-center transition-colors ${
-                    urgencyLevel === level
-                      ? level === 'HIGH' 
-                        ? 'border-red-500 bg-red-50 text-red-700'
-                        : level === 'MEDIUM'
-                        ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
-                        : 'border-green-500 bg-green-50 text-green-700'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}>
-                    <div className="font-medium">{level}</div>
-                    <div className="text-sm">
-                      {level === 'HIGH' && 'Life threatening'}
-                      {level === 'MEDIUM' && 'Needs attention'}
-                      {level === 'LOW' && 'Stable condition'}
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
-            {errors.urgencyLevel && (
-              <p className="text-red-500 text-sm mt-1">{errors.urgencyLevel.message}</p>
-            )}
-          </div>
-
-          {/* Location */}
+          {/* Injury Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Location Address *
+              Injury Description
             </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Enter detailed address or landmark"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                {...register('location', { required: 'Location is required' })}
-              />
-              <button
-                type="button"
-                onClick={getCurrentLocation}
-                className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                <MapPin className="h-5 w-5" />
-              </button>
-            </div>
-            {errors.location && (
-              <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>
-            )}
+            <textarea
+              rows={3}
+              placeholder="Describe the animal's injuries..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              {...register('injuryDescription')}
+            />
+          </div>
+
+          {/* Additional Notes */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Additional Notes
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Any additional details or observations..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              {...register('additionalNotes')}
+            />
+          </div>
+
+          {/* Latitude and Longitude (Hidden Inputs) */}
+          <input type="hidden" {...register('latitude', { required: 'Latitude is required' })} />
+          <input type="hidden" {...register('longitude', { required: 'Longitude is required' })} />
+
+          <div className="flex flex-col gap-2">
+            <label className="block text-sm font-medium text-gray-700">Get Current Location:</label>
+            <button
+              type="button"
+              onClick={getCurrentLocation}
+              className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors inline-flex items-center justify-center w-max"
+            >
+              <MapPin className="h-5 w-5 mr-2" />
+              Detect Location
+            </button>
           </div>
 
           {/* Description */}

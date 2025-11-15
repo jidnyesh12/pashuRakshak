@@ -9,6 +9,7 @@ public class ReportResponse {
     private Long id;
     private String trackingId;
     private String animalType;
+    private String condition;
     private String injuryDescription;
     private String additionalNotes;
     private Double latitude;
@@ -38,6 +39,9 @@ public class ReportResponse {
     public String getAnimalType() { return animalType; }
     public void setAnimalType(String animalType) { this.animalType = animalType; }
     
+    public String getCondition() { return condition; }
+    public void setCondition(String condition) { this.condition = condition; }
+
     public String getInjuryDescription() { return injuryDescription; }
     public void setInjuryDescription(String injuryDescription) { this.injuryDescription = injuryDescription; }
     

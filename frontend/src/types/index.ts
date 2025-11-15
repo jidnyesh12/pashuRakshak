@@ -6,7 +6,6 @@ export interface User {
   phone?: string;
   roles: UserRole[];
   enabled: boolean;
-  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -73,14 +72,12 @@ export type ReportStatus =
 export interface ReportRequest {
   animalType: string;
   condition: string;
-  urgencyLevel: string;
-  location: string;
+  // urgencyLevel: string; // Removed as per new requirement
   description?: string;
   injuryDescription?: string;
   additionalNotes?: string;
-  latitude?: number;
-  longitude?: number;
-  address?: string;
+  latitude: number;
+  longitude: number;
   imageUrls?: string[];
   reporterName: string;
   reporterPhone: string;

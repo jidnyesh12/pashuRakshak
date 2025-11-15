@@ -20,6 +20,10 @@ public class AnimalReport {
     
     @NotBlank(message = "Animal type is required")
     private String animalType;
+
+    @NotBlank(message = "Condition is required")
+    @Column(nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'UNKNOWN'")
+    private String condition;
     
     @NotBlank(message = "Injury description is required")
     @Column(length = 1000)
@@ -33,8 +37,6 @@ public class AnimalReport {
     
     @NotNull(message = "Longitude is required")
     private Double longitude;
-    
-    private String address;
     
     @ElementCollection
     @CollectionTable(name = "report_images", joinColumns = @JoinColumn(name = "report_id"))
@@ -68,6 +70,9 @@ public class AnimalReport {
     
     public String getAnimalType() { return animalType; }
     public void setAnimalType(String animalType) { this.animalType = animalType; }
+
+    public String getCondition() { return condition; }
+    public void setCondition(String condition) { this.condition = condition; }
     
     public String getInjuryDescription() { return injuryDescription; }
     public void setInjuryDescription(String injuryDescription) { this.injuryDescription = injuryDescription; }
@@ -80,9 +85,6 @@ public class AnimalReport {
     
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }
-    
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
     
     public List<String> getImageUrls() { return imageUrls; }
     public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }

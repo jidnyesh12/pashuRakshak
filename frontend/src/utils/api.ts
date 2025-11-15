@@ -8,7 +8,8 @@ import type {
   ReportRequest, 
   NGO,
   UpdateUserRequest,
-  ChangePasswordRequest
+  ChangePasswordRequest,
+  UserResponse
 } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -24,7 +25,7 @@ const api = axios.create({
 // Add auth token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) {
+  if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -52,6 +53,24 @@ export const authAPI = {
 
   signup: async (data: SignupRequest): Promise<string> => {
     const response = await api.post('/auth/signup', data);
+    return response.data;
+  },
+
+  validateToken: async (token: string): Promise<boolean> => {
+    try {
+      const response = await api.get('/auth/validateToken', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.status === 200;
+    } catch (error) {
+      return false;
+    }
+  },
+
+  getProfile: async (): Promise<User> => {
+    const response = await api.get('/users/profile');
     return response.data;
   },
 };
@@ -112,6 +131,7 @@ export const userAPI = {
 // Reports API
 export const reportsAPI = {
   createReport: async (data: ReportRequest): Promise<AnimalReport> => {
+    console.log(data);
     const response = await api.post('/reports', data);
     return response.data;
   },

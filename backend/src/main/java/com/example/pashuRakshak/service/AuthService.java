@@ -77,4 +77,8 @@ public class AuthService {
         
         return "User registered successfully!";
     }
+
+    public boolean validateToken(String token) {
+        return jwtUtils.validateJwtToken(token);
+    }
 }

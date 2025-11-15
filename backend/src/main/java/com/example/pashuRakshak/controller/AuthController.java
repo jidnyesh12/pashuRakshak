@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
     
     @Autowired
@@ -37,5 +36,18 @@ public class AuthController {
         }
         
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/validateToken")
+    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body("Missing or invalid Authorization header");
+        }
+        String token = authorizationHeader.substring(7);
+        if (authService.validateToken(token)) {
+            return ResponseEntity.ok(true);
+        } else {
+            return ResponseEntity.status(401).body(false);
+        }
     }
 }
