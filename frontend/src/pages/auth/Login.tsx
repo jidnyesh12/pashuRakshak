@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -13,7 +13,16 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const location = useLocation();
+  const { login, isAuthenticated } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const from = location.state?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location]);
 
   const {
     register,
@@ -40,13 +49,19 @@ const Login: React.FC = () => {
 
       toast.success('Login successful!');
       
-      // Redirect based on role
-      if (response.roles.includes('ADMIN')) {
-        navigate('/admin/dashboard');
-      } else if (response.roles.includes('NGO')) {
-        navigate('/ngo/dashboard');
+      // Redirect to the page they were trying to access, or dashboard based on role
+      const from = location.state?.from?.pathname;
+      if (from && from !== '/') {
+        navigate(from, { replace: true });
       } else {
-        navigate('/user/dashboard');
+        // Redirect based on role
+        if (response.roles.includes('ADMIN')) {
+          navigate('/admin/dashboard');
+        } else if (response.roles.includes('NGO')) {
+          navigate('/ngo/dashboard');
+        } else {
+          navigate('/user/dashboard');
+        }
       }
     } catch (error: any) {
       toast.error(error.response?.data || 'Login failed');

@@ -56,18 +56,7 @@ export const authAPI = {
     return response.data;
   },
 
-  validateToken: async (token: string): Promise<boolean> => {
-    try {
-      const response = await api.get('/auth/validateToken', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return response.status === 200;
-    } catch (error) {
-      return false;
-    }
-  },
+
 
   getProfile: async (): Promise<User> => {
     const response = await api.get('/users/profile');
