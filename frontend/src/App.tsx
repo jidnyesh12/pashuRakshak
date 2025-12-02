@@ -1,11 +1,11 @@
-import React from 'react';
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 
 // Pages
 import Home from './pages/Home';
-import LandingPage from './pages/LandingPage';
+
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
 import UserDashboard from './pages/dashboards/UserDashboard';
@@ -16,6 +16,7 @@ import UserManagement from './pages/UserManagement';
 import NgoManagement from './pages/NgoManagement';
 import ReportAnimal from './pages/ReportAnimal';
 import TrackReport from './pages/TrackReport';
+import Emergency from './pages/Emergency';
 import Unauthorized from './pages/Unauthorized';
 
 // Protected Route Component
@@ -119,6 +120,7 @@ function App() {
             {/* Public Report Routes */}
             <Route path="/report-animal" element={<ReportAnimal />} />
             <Route path="/track-report" element={<TrackReport />} />
+            <Route path="/emergency" element={<Emergency />} />
             
             {/* Redirect /dashboard based on user role */}
             <Route 

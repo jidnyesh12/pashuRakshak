@@ -17,65 +17,71 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/reports")
 public class AnimalReportController {
-    
+
     @Autowired
     private AnimalReportService reportService;
-    
+
     @PostMapping
-    public ResponseEntity<ReportResponse> createReport(@Valid @RequestBody ReportRequest request) {
+    public ResponseEntity<ReportResponse> createReport(@Valid @RequestBody ReportRequest request,
+            java.security.Principal principal) {
         System.out.println("working--------------------------------------------------");
+        if (principal != null) {
+            request.setReporterEmail(principal.getName());
+        }
         ReportResponse response = reportService.createReport(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
-    
+
     @GetMapping("/track/{trackingId}")
     public ResponseEntity<ReportResponse> getReportByTrackingId(@PathVariable String trackingId) {
         Optional<ReportResponse> report = reportService.getReportByTrackingId(trackingId);
         return report.map(r -> ResponseEntity.ok(r))
-                    .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build());
     }
-    
+
     @GetMapping
-    public ResponseEntity<List<ReportResponse>> getAllReports() {
-        List<ReportResponse> reports = reportService.getAllReports();
-        return ResponseEntity.ok(reports);
+    public ResponseEntity<List<ReportResponse>> getAllReports(java.security.Principal principal) {
+        if (principal != null) {
+            return ResponseEntity.ok(reportService.getReportsForUser(principal.getName()));
+        }
+        return ResponseEntity.ok(java.util.Collections.emptyList());
     }
-    
+
     @GetMapping("/available")
     public ResponseEntity<List<ReportResponse>> getAvailableReports() {
         List<ReportResponse> reports = reportService.getAvailableReports();
         return ResponseEntity.ok(reports);
     }
-    
+
     @GetMapping("/ngo/{ngoId}")
     public ResponseEntity<List<ReportResponse>> getReportsByNgo(@PathVariable Long ngoId) {
         List<ReportResponse> reports = reportService.getReportsByNgo(ngoId);
         return ResponseEntity.ok(reports);
     }
-    
+
     @PostMapping("/{trackingId}/accept")
     public ResponseEntity<ReportResponse> acceptReport(
             @PathVariable String trackingId,
             @RequestBody Map<String, Object> request) {
-        
+
         Long ngoId = Long.valueOf(request.get("ngoId").toString());
         String ngoName = request.get("ngoName").toString();
-        
+
         Optional<ReportResponse> report = reportService.acceptReportByTrackingId(trackingId, ngoId, ngoName);
         return report.map(r -> ResponseEntity.ok(r))
-                    .orElse(ResponseEntity.badRequest().build());
+                .orElse(ResponseEntity.badRequest().build());
     }
-    
+
     @PutMapping("/{trackingId}/status")
     public ResponseEntity<ReportResponse> updateReportStatus(
             @PathVariable String trackingId,
             @RequestBody Map<String, String> request) {
-        
+
         try {
             ReportStatus status = ReportStatus.valueOf(request.get("status"));
             Optional<ReportResponse> report = reportService.updateReportStatusByTrackingId(trackingId, status);
             return report.map(r -> ResponseEntity.ok(r))
-                        .orElse(ResponseEntity.notFound().build());
+                    .orElse(ResponseEntity.notFound().build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }

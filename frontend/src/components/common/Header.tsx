@@ -1,17 +1,20 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, LogOut, User } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
-  const token = localStorage.getItem('token');
-  const userRole = localStorage.getItem('role');
+  const { logout, user, isAuthenticated } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    navigate('/');
+    logout();
+    navigate('/', { replace: true });
+    window.location.href = '/'; // Force full page reload to clear any cached state
   };
+
+  // Get user role from context
+  const userRole = user?.roles?.[0]?.toLowerCase();
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
@@ -27,7 +30,7 @@ const Header: React.FC = () => {
 
           {/* Navigation */}
           <nav className="flex items-center space-x-6">
-            {token ? (
+            {isAuthenticated ? (
               <>
                 <Link
                   to={`/${userRole}-dashboard`}

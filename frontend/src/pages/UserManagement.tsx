@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Filter, UserPlus, UserMinus, Trash2, Shield, Mail, Phone } from 'lucide-react';
+import { Users, Search, UserPlus, UserMinus, Trash2, Shield, Mail, Phone } from 'lucide-react';
 import Layout from '../components/common/Layout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { userAPI } from '../utils/api';

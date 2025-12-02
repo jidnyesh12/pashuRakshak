@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, MapPin, Save, Camera, Upload, Trash2, AlertCircle } from 'lucide-react';
+import { X, MapPin, Save, Camera, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { reportsAPI } from '../../utils/api';
 import { getCurrentLocation } from '../../utils/location';
@@ -22,7 +22,7 @@ const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSuccess })
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [locationData, setLocationData] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
   
-  const { register, handleSubmit, formState: { errors }, watch, reset, setValue } = useForm<ReportRequest>();
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<ReportRequest>();
 
   const onSubmit = async (data: ReportRequest) => {
     if (!locationData) {

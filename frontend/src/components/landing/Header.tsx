@@ -4,7 +4,7 @@ import {
   Heart, 
   Menu, 
   X, 
-  Phone, 
+ 
   ArrowRight,
   Shield
 } from 'lucide-react';

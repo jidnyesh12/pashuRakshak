@@ -61,7 +61,7 @@ export interface AnimalReport {
   assignedNgo?: string;
 }
 
-export type ReportStatus = 
+export type ReportStatus =
   | 'SUBMITTED'
   | 'SEARCHING_FOR_HELP'
   | 'HELP_ON_THE_WAY'
@@ -78,6 +78,7 @@ export interface ReportRequest {
   additionalNotes?: string;
   latitude: number;
   longitude: number;
+  address?: string;
   imageUrls?: string[];
   reporterName: string;
   reporterPhone: string;
@@ -96,6 +97,7 @@ export interface NGO {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  // enabled: boolean; // Removed as it duplicates isActive
 }
 
 export interface UpdateUserRequest {

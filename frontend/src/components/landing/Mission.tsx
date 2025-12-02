@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Target, Heart, Globe, Users } from 'lucide-react';
 
 const Mission = () => {

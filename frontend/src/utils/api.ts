@@ -1,11 +1,11 @@
 import axios from 'axios';
-import type { 
-  LoginRequest, 
-  SignupRequest, 
-  JwtResponse, 
-  User, 
-  AnimalReport, 
-  ReportRequest, 
+import type {
+  LoginRequest,
+  SignupRequest,
+  JwtResponse,
+
+  AnimalReport,
+  ReportRequest,
   NGO,
   UpdateUserRequest,
   ChangePasswordRequest,
@@ -204,6 +204,20 @@ export const ngoAPI = {
 
   deactivateNgo: async (id: number): Promise<void> => {
     await api.delete(`/ngos/${id}`);
+  },
+};
+
+// Upload API
+export const uploadAPI = {
+  uploadImage: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.url;
   },
 };
 

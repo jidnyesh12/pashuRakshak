@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Plus, Edit, Trash2, MapPin, Mail, Phone, Eye } from 'lucide-react';
+import { Building2, Plus, Edit, Trash2, MapPin, Mail, Phone } from 'lucide-react';
 import Layout from '../components/common/Layout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { ngoAPI } from '../utils/api';
