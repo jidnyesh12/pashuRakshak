@@ -9,7 +9,7 @@ import RoleBasedJoin from '../components/landing/RoleBasedJoin';
 import Testimonials from '../components/landing/Testimonials';
 import LegalTrust from '../components/landing/LegalTrust';
 import Footer from '../components/landing/Footer';
-import EmergencyButton from '../components/common/EmergencyButton';
+
 
 const LandingPage: React.FC = () => {
   return (
@@ -34,7 +34,7 @@ const LandingPage: React.FC = () => {
       <div id="contact">
         <Footer />
       </div>
-      <EmergencyButton />
+
     </div>
   );
 };

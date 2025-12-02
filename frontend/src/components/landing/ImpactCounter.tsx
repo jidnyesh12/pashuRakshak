@@ -1,25 +1,41 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Users, Clock, Globe } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
-const ImpactCounter = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [counts, setCounts] = useState({
+interface Counts {
+  animals: number;
+  ngos: number;
+  volunteers: number;
+  cities: number;
+}
+
+interface Stat {
+  icon: LucideIcon;
+  key: keyof Counts;
+  label: string;
+  suffix: string;
+  color: string;
+}
+
+const ImpactCounter: React.FC = () => {
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [counts, setCounts] = useState<Counts>({
     animals: 0,
     ngos: 0,
     volunteers: 0,
     cities: 0
   });
-  
-  const sectionRef = useRef(null);
-  
-  const finalCounts = {
+
+  const sectionRef = useRef<HTMLElement>(null);
+
+  const finalCounts: Counts = {
     animals: 500,
     ngos: 50,
     volunteers: 1000,
     cities: 25
   };
-  
-  const stats = [
+
+  const stats: Stat[] = [
     {
       icon: Heart,
       key: 'animals',
@@ -78,7 +94,7 @@ const ImpactCounter = () => {
     const timer = setInterval(() => {
       currentStep++;
       const progress = currentStep / steps;
-      
+
       setCounts({
         animals: Math.floor(finalCounts.animals * progress),
         ngos: Math.floor(finalCounts.ngos * progress),
@@ -96,7 +112,7 @@ const ImpactCounter = () => {
   }, [isVisible]);
 
   return (
-    <section ref={sectionRef} className="py-20 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900">
+    <section ref={sectionRef} className="py-20 bg-gradient-to-br from-purple-900 via-fuchsia-800 to-pink-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
@@ -107,11 +123,11 @@ const ImpactCounter = () => {
             Every number represents a life saved, a family reunited, or hope restored.
           </p>
         </div>
-        
+
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {stats.map((stat, index) => (
-            <div 
+            <div
               key={stat.key}
               className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 hover:bg-white/15 transition-all duration-300"
             >
@@ -119,12 +135,12 @@ const ImpactCounter = () => {
               <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20 mb-6 ${stat.color}`}>
                 <stat.icon className="w-8 h-8" />
               </div>
-              
+
               {/* Number */}
               <div className="text-4xl md:text-5xl font-bold text-white mb-2">
                 {counts[stat.key].toLocaleString()}{stat.suffix}
               </div>
-              
+
               {/* Label */}
               <div className="text-blue-100 font-medium">
                 {stat.label}
@@ -132,7 +148,7 @@ const ImpactCounter = () => {
             </div>
           ))}
         </div>
-        
+
         {/* Additional Context */}
         <div className="mt-16 text-center">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 max-w-4xl mx-auto">
@@ -140,10 +156,10 @@ const ImpactCounter = () => {
               24/7 Response Network
             </h3>
             <p className="text-blue-100 text-lg leading-relaxed">
-              Our dedicated network operates around the clock, ensuring no emergency call goes unanswered. 
+              Our dedicated network operates around the clock, ensuring no emergency call goes unanswered.
               From street dogs to exotic birds, every life matters in our mission to create a compassionate India.
             </p>
-            
+
             {/* Response Time Indicator */}
             <div className="mt-8 flex items-center justify-center gap-8 text-center">
               <div>

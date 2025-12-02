@@ -12,7 +12,7 @@ const HowItWorks = () => {
     },
     {
       icon: Users,
-      title: "NGOs Respond", 
+      title: "NGOs Respond",
       description: "Verified rescue teams receive instant notifications",
       color: "text-blue-500"
     },
@@ -28,9 +28,9 @@ const HowItWorks = () => {
     <section className="relative py-20 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 z-0">
-        <div className="w-full h-full bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-800"></div>
+        <div className="w-full h-full bg-gradient-to-br from-teal-900 via-cyan-800 to-emerald-900"></div>
       </div>
-      
+
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
@@ -42,7 +42,7 @@ const HowItWorks = () => {
             From report to rescue — fast, transparent, and reliable.
           </p>
         </div>
-        
+
         {/* Steps */}
         <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
           {steps.map((step, index) => (
@@ -53,17 +53,17 @@ const HowItWorks = () => {
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-900 font-bold text-sm">
                   {index + 1}
                 </div>
-                
+
                 {/* Icon */}
                 <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20 mb-6 ${step.color}`}>
                   <step.icon className="w-8 h-8" />
                 </div>
-                
+
                 {/* Content */}
                 <h3 className="text-2xl font-bold text-white mb-4">{step.title}</h3>
                 <p className="text-blue-100 leading-relaxed">{step.description}</p>
               </div>
-              
+
               {/* Arrow (except for last item) */}
               {index < steps.length - 1 && (
                 <div className="hidden md:block absolute top-1/2 -right-6 transform -translate-y-1/2">
@@ -73,7 +73,7 @@ const HowItWorks = () => {
             </div>
           ))}
         </div>
-        
+
         {/* Bottom CTA */}
         <div className="text-center mt-16">
           <p className="text-blue-100 mb-6 text-lg">

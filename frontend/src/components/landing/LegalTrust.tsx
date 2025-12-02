@@ -1,11 +1,10 @@
 import React from 'react';
-import { 
-  Shield, 
-  FileText, 
-  CheckCircle, 
-  Lock, 
-  Eye, 
-  Users,
+import {
+  Shield,
+  FileText,
+  CheckCircle,
+  Lock,
+  Eye,
   ArrowRight,
   Award
 } from 'lucide-react';
@@ -17,10 +16,10 @@ const LegalTrust = () => {
       title: "Privacy Policy",
       description: "Comprehensive data protection and privacy guidelines ensuring your information stays secure.",
       features: [
-        "GDPR compliant data handling",
-        "Minimal data collection policy", 
+        "Minimal data collection policy",
         "Transparent usage guidelines",
-        "Right to data deletion"
+        "Right to data deletion",
+        "Secure data storage"
       ],
       link: "/privacy-policy"
     },
@@ -50,26 +49,26 @@ const LegalTrust = () => {
     }
   ];
 
-  const certifications = [
-    {
-      icon: Award,
-      title: "ISO 27001 Certified",
-      description: "Information security management system certification"
-    },
+  const securityFeatures = [
     {
       icon: Lock,
-      title: "SSL Encrypted",
-      description: "End-to-end encryption for all data transmission"
+      title: "Data Encryption",
+      description: "Your data is encrypted and securely stored"
+    },
+    {
+      icon: Shield,
+      title: "Secure Login",
+      description: "Protected authentication for all user accounts"
     },
     {
       icon: Eye,
-      title: "SOC 2 Compliant",
-      description: "Service organization control for security and availability"
+      title: "Privacy First",
+      description: "We respect your privacy and protect your information"
     },
     {
-      icon: Users,
-      title: "GDPR Compliant",
-      description: "European data protection regulation compliance"
+      icon: Award,
+      title: "Regular Backups",
+      description: "Your data is backed up regularly for safety"
     }
   ];
 
@@ -85,11 +84,11 @@ const LegalTrust = () => {
             Built on the foundation of trust, security, and legal compliance to ensure safe rescue operations.
           </p>
         </div>
-        
+
         {/* Trust Cards */}
         <div className="grid lg:grid-cols-3 gap-8 mb-16">
           {trustCards.map((card, index) => (
-            <div 
+            <div
               key={index}
               className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100"
             >
@@ -97,7 +96,7 @@ const LegalTrust = () => {
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-blue-100 text-blue-600 mb-6">
                 <card.icon className="w-7 h-7" />
               </div>
-              
+
               {/* Content */}
               <h3 className="text-xl font-bold text-gray-900 mb-4">
                 {card.title}
@@ -105,7 +104,7 @@ const LegalTrust = () => {
               <p className="text-gray-600 leading-relaxed mb-6">
                 {card.description}
               </p>
-              
+
               {/* Features */}
               <ul className="space-y-2 mb-6">
                 {card.features.map((feature, featureIndex) => (
@@ -115,9 +114,9 @@ const LegalTrust = () => {
                   </li>
                 ))}
               </ul>
-              
+
               {/* Link */}
-              <a 
+              <a
                 href={card.link}
                 className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
               >
@@ -127,31 +126,31 @@ const LegalTrust = () => {
             </div>
           ))}
         </div>
-        
-        {/* Certifications */}
+
+        {/* Security Features */}
         <div className="bg-white rounded-3xl p-12 shadow-sm border border-gray-100">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              Security Certifications
+              Platform Security
             </h3>
             <p className="text-gray-600 text-lg">
-              Industry-standard security and compliance certifications
+              We take security seriously to protect your data and privacy
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {certifications.map((cert, index) => (
+            {securityFeatures.map((feature, index) => (
               <div key={index} className="text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-4">
-                  <cert.icon className="w-8 h-8" />
+                  <feature.icon className="w-8 h-8" />
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-2">{cert.title}</h4>
-                <p className="text-gray-600 text-sm">{cert.description}</p>
+                <h4 className="font-semibold text-gray-900 mb-2">{feature.title}</h4>
+                <p className="text-gray-600 text-sm">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
-        
+
         {/* Emergency Contact */}
         <div className="mt-16 bg-gradient-to-r from-red-500 to-red-600 rounded-3xl p-12 text-center text-white">
           <h3 className="text-3xl font-bold mb-4">
@@ -160,7 +159,7 @@ const LegalTrust = () => {
           <p className="text-red-100 text-lg mb-8 max-w-2xl mx-auto">
             For urgent rescue situations or platform emergencies, our support team is available 24/7
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg px-6 py-3">
               <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>

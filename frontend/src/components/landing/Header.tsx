@@ -9,8 +9,8 @@ import {
   Shield
 } from 'lucide-react';
 
-const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+const Header: React.FC = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
   const navLinks = [
     { name: 'How It Works', href: '#how-it-works' },
@@ -20,7 +20,7 @@ const Header = () => {
     { name: 'Contact', href: '#contact' }
   ];
 
-  const scrollToSection = (href) => {
+  const scrollToSection = (href: string) => {
     if (href.startsWith('#')) {
       const element = document.querySelector(href);
       if (element) {

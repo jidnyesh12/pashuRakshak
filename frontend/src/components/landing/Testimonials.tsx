@@ -1,8 +1,17 @@
 import React from 'react';
 import { Star, Quote } from 'lucide-react';
 
-const Testimonials = () => {
-  const testimonials = [
+interface Testimonial {
+  name: string;
+  role: string;
+  location: string;
+  image: string;
+  content: string;
+  rating: number;
+}
+
+const Testimonials: React.FC = () => {
+  const testimonials: Testimonial[] = [
     {
       name: "Dr. Priya Sharma",
       role: "Veterinarian, Mumbai Animal Welfare Society",
@@ -15,7 +24,7 @@ const Testimonials = () => {
       name: "Rajesh Kumar",
       role: "Volunteer Coordinator",
       location: "Delhi, NCR",
-      image: "/images/testimonial-volunteer.jpg", 
+      image: "/images/testimonial-volunteer.jpg",
       content: "As someone who has been rescuing animals for 8 years, I can say this platform is a game-changer. The verification process ensures we work with genuine cases, and the tracking system keeps everyone accountable.",
       rating: 5
     },
@@ -41,11 +50,11 @@ const Testimonials = () => {
             Real stories from NGO workers, volunteers, and citizens who are making a difference every day.
           </p>
         </div>
-        
+
         {/* Testimonials Grid */}
         <div className="grid lg:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
-            <div 
+            <div
               key={index}
               className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 relative"
             >
@@ -55,19 +64,19 @@ const Testimonials = () => {
                   <Quote className="w-4 h-4 text-white" />
                 </div>
               </div>
-              
+
               {/* Rating */}
               <div className="flex items-center gap-1 mb-6 mt-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                 ))}
               </div>
-              
+
               {/* Content */}
               <p className="text-gray-700 leading-relaxed mb-8 italic">
                 "{testimonial.content}"
               </p>
-              
+
               {/* Author */}
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
@@ -82,39 +91,35 @@ const Testimonials = () => {
             </div>
           ))}
         </div>
-        
-        {/* Trust Indicators */}
+
+        {/* Community Network */}
         <div className="mt-16 bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              Trusted by Leading Organizations
+              Growing Community Network
             </h3>
             <p className="text-gray-600">
-              Partnered with India's most respected animal welfare organizations
+              Join our expanding network of animal lovers and rescue volunteers
             </p>
           </div>
-          
-          {/* Partner Logos Placeholder */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center opacity-60">
-            <div className="text-center">
-              <div className="h-12 bg-gray-200 rounded-lg flex items-center justify-center mb-2">
-                <span className="text-gray-500 font-semibold">SPCA India</span>
-              </div>
+
+          {/* Community Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center p-4 bg-green-50 rounded-xl">
+              <div className="text-3xl font-bold text-green-600 mb-1">50+</div>
+              <div className="text-sm text-gray-600">Verified NGOs</div>
             </div>
-            <div className="text-center">
-              <div className="h-12 bg-gray-200 rounded-lg flex items-center justify-center mb-2">
-                <span className="text-gray-500 font-semibold">PFA</span>
-              </div>
+            <div className="text-center p-4 bg-blue-50 rounded-xl">
+              <div className="text-3xl font-bold text-blue-600 mb-1">1000+</div>
+              <div className="text-sm text-gray-600">Active Users</div>
             </div>
-            <div className="text-center">
-              <div className="h-12 bg-gray-200 rounded-lg flex items-center justify-center mb-2">
-                <span className="text-gray-500 font-semibold">Animal Aid</span>
-              </div>
+            <div className="text-center p-4 bg-purple-50 rounded-xl">
+              <div className="text-3xl font-bold text-purple-600 mb-1">25+</div>
+              <div className="text-sm text-gray-600">Cities</div>
             </div>
-            <div className="text-center">
-              <div className="h-12 bg-gray-200 rounded-lg flex items-center justify-center mb-2">
-                <span className="text-gray-500 font-semibold">Welfare Board</span>
-              </div>
+            <div className="text-center p-4 bg-orange-50 rounded-xl">
+              <div className="text-3xl font-bold text-orange-600 mb-1">24/7</div>
+              <div className="text-sm text-gray-600">Support</div>
             </div>
           </div>
         </div>
