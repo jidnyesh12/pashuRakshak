@@ -37,10 +37,39 @@ const Header: React.FC = () => {
             <Link to="/" className="text-gray-700 hover:text-primary-600 transition-colors">
               Home
             </Link>
+            <Link to="/report-animal" className="text-gray-700 hover:text-primary-600 transition-colors">
+              Report Animal
+            </Link>
+            <Link to="/track-report" className="text-gray-700 hover:text-primary-600 transition-colors">
+              Track Report
+            </Link>
             {isAuthenticated && (
               <Link to={getDashboardLink()} className="text-gray-700 hover:text-primary-600 transition-colors">
                 Dashboard
               </Link>
+            )}
+            {user?.roles?.includes('ADMIN') && (
+              <div className="relative group">
+                <span className="text-gray-700 hover:text-primary-600 transition-colors cursor-pointer">
+                  Admin
+                </span>
+                <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="py-1">
+                    <Link
+                      to="/admin/users"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      User Management
+                    </Link>
+                    <Link
+                      to="/admin/ngos"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      NGO Management
+                    </Link>
+                  </div>
+                </div>
+              </div>
             )}
           </nav>
 

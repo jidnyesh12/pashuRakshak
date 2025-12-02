@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { X, MapPin, Save } from 'lucide-react';
+import { X, MapPin, Save, Camera, Upload, Trash2, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { reportsAPI } from '../../utils/api';
+import { getCurrentLocation } from '../../utils/location';
+import { uploadMultipleToCloudinary } from '../../utils/cloudinary';
 import LoadingSpinner from './LoadingSpinner';
 import toast from 'react-hot-toast';
 import type { ReportRequest } from '../../types';
-// import { reverseGeocode } from '../../utils/location'; // Removed import
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -15,29 +16,53 @@ interface ReportModalProps {
 
 const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [locationData, setLocationData] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
+  
   const { register, handleSubmit, formState: { errors }, watch, reset, setValue } = useForm<ReportRequest>();
 
-  // const urgencyLevel = watch('urgencyLevel'); // Removed
-
   const onSubmit = async (data: ReportRequest) => {
+    if (!locationData) {
+      toast.error('Please get your location first');
+      return;
+    }
+
     setLoading(true);
     try {
-      const report = await reportsAPI.createReport(data);
+      // Upload images if any
+      let uploadedImageUrls: string[] = [];
+      if (selectedImages.length > 0) {
+        setUploadingImages(true);
+        try {
+          uploadedImageUrls = await uploadMultipleToCloudinary(selectedImages);
+          toast.success(`${uploadedImageUrls.length} image(s) uploaded successfully`);
+        } catch (error: any) {
+          toast.error(error.message || 'Failed to upload images');
+          setUploadingImages(false);
+          return;
+        }
+        setUploadingImages(false);
+      }
+
+      const reportData: ReportRequest = {
+        ...data,
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        imageUrls: uploadedImageUrls
+      };
+
+      const report = await reportsAPI.createReport(reportData);
       toast.success(`Report submitted successfully! Tracking ID: ${report.trackingId}`);
-      reset({ 
-        animalType: '', 
-        condition: '', 
-        // urgencyLevel: '', // Removed
-        description: '', 
-        injuryDescription: '',
-        additionalNotes: '',
-        latitude: 0, 
-        longitude: 0,
-        imageUrls: [],
-        reporterName: '', 
-        reporterPhone: '',
-        reporterEmail: ''
-      });
+      
+      // Reset form and state
+      reset();
+      setSelectedImages([]);
+      setImageUrls([]);
+      setLocationData(null);
+      
       onClose();
       if (onSuccess) {
         onSuccess(report.trackingId);
@@ -46,27 +71,62 @@ const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSuccess })
       toast.error(error.response?.data?.message || 'Failed to submit report');
     } finally {
       setLoading(false);
+      setUploadingImages(false);
     }
   };
 
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const latitude = position.coords.latitude;
-          const longitude = position.coords.longitude;
-          setValue('latitude', latitude);
-          setValue('longitude', longitude);
-          
-          toast.success('Location detected successfully');
-        },
-        (error) => {
-          toast.error('Unable to get your location');
-        }
-      );
-    } else {
-      toast.error('Geolocation is not supported by this browser');
+  const handleGetLocation = async () => {
+    setGettingLocation(true);
+    try {
+      const location = await getCurrentLocation();
+      setLocationData(location);
+      setValue('latitude', location.latitude);
+      setValue('longitude', location.longitude);
+      toast.success('Location detected successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Unable to get your location');
+    } finally {
+      setGettingLocation(false);
     }
+  };
+
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    // Validate file types and sizes
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not an image file`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error(`${file.name} is too large. Maximum size is 5MB`);
+        return false;
+      }
+      return true;
+    });
+
+    if (selectedImages.length + validFiles.length > 5) {
+      toast.error('Maximum 5 images allowed');
+      return;
+    }
+
+    setSelectedImages(prev => [...prev, ...validFiles]);
+
+    // Create preview URLs
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImageUrls(prev => [...prev, e.target?.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImageUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   if (!isOpen) return null;
@@ -160,20 +220,103 @@ const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSuccess })
             />
           </div>
 
-          {/* Latitude and Longitude (Hidden Inputs) */}
-          <input type="hidden" {...register('latitude', { required: 'Latitude is required' })} />
-          <input type="hidden" {...register('longitude', { required: 'Longitude is required' })} />
+          {/* Location Section */}
+          <div>
+            <h3 className="text-lg font-medium mb-4">Location Information</h3>
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleGetLocation}
+                  disabled={gettingLocation}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center justify-center w-max disabled:opacity-50"
+                >
+                  {gettingLocation ? (
+                    <LoadingSpinner size="sm" />
+                  ) : (
+                    <MapPin className="h-5 w-5 mr-2" />
+                  )}
+                  {gettingLocation ? 'Getting Location...' : 'Get Current Location'}
+                </button>
+                
+                {locationData && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center text-green-800">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      <span className="text-sm font-medium">Location detected</span>
+                    </div>
+                    {locationData.address && (
+                      <p className="text-sm text-green-700 mt-1">{locationData.address}</p>
+                    )}
+                    <p className="text-xs text-green-600 mt-1">
+                      Coordinates: {locationData.latitude.toFixed(6)}, {locationData.longitude.toFixed(6)}
+                    </p>
+                  </div>
+                )}
+                
+                {!locationData && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <div className="flex items-center text-yellow-800">
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      <span className="text-sm">Location is required to submit the report</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="block text-sm font-medium text-gray-700">Get Current Location:</label>
-            <button
-              type="button"
-              onClick={getCurrentLocation}
-              className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors inline-flex items-center justify-center w-max"
-            >
-              <MapPin className="h-5 w-5 mr-2" />
-              Detect Location
-            </button>
+          {/* Photo Upload Section */}
+          <div>
+            <h3 className="text-lg font-medium mb-4">Photos (Optional)</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload photos of the animal (Max 5 images, 5MB each)
+                </label>
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Camera className="w-8 h-8 mb-4 text-gray-500" />
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">PNG, JPG, JPEG (MAX. 5MB each)</p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      disabled={selectedImages.length >= 5}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Image Previews */}
+              {imageUrls.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {imageUrls.map((url, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={url}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Description */}
@@ -242,11 +385,17 @@ const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSuccess })
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploadingImages || !locationData}
               className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center"
             >
-              {loading ? <LoadingSpinner size="sm" /> : <Save className="h-4 w-4" />}
-              <span className="ml-2">Submit Report</span>
+              {loading || uploadingImages ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              <span className="ml-2">
+                {uploadingImages ? 'Uploading Images...' : loading ? 'Submitting...' : 'Submit Report'}
+              </span>
             </button>
           </div>
         </form>

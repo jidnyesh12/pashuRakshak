@@ -109,3 +109,25 @@ export interface ChangePasswordRequest {
   newPassword: string;
   confirmPassword: string;
 }
+
+export interface UserResponse {
+  id: number;
+  username: string;
+  email: string;
+  fullName: string;
+  phone?: string;
+  roles: UserRole[];
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NgoRequest {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  description?: string;
+}
