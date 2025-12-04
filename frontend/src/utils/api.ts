@@ -1,15 +1,16 @@
 import axios from 'axios';
-import type { 
-  LoginRequest, 
-  SignupRequest, 
-  JwtResponse, 
-  User, 
-  AnimalReport, 
-  ReportRequest, 
+import type {
+  LoginRequest,
+  SignupRequest,
+  JwtResponse,
+
+  AnimalReport,
+  ReportRequest,
   NGO,
   UpdateUserRequest,
   ChangePasswordRequest,
-  UserResponse
+  UserResponse,
+  NgoRequest
 } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -56,33 +57,20 @@ export const authAPI = {
     return response.data;
   },
 
-  validateToken: async (token: string): Promise<boolean> => {
-    try {
-      const response = await api.get('/auth/validateToken', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return response.status === 200;
-    } catch (error) {
-      return false;
-    }
-  },
-
-  getProfile: async (): Promise<User> => {
-    const response = await api.get('/users/profile');
+  validateToken: async (): Promise<boolean> => {
+    const response = await api.get('/auth/validateToken');
     return response.data;
   },
 };
 
 // User API
 export const userAPI = {
-  getProfile: async (): Promise<User> => {
+  getProfile: async (): Promise<UserResponse> => {
     const response = await api.get('/users/profile');
     return response.data;
   },
 
-  updateProfile: async (data: UpdateUserRequest): Promise<User> => {
+  updateProfile: async (data: UpdateUserRequest): Promise<UserResponse> => {
     const response = await api.put('/users/profile', data);
     return response.data;
   },
@@ -92,17 +80,27 @@ export const userAPI = {
     return response.data;
   },
 
-  getAllUsers: async (): Promise<User[]> => {
+  getAllUsers: async (): Promise<UserResponse[]> => {
     const response = await api.get('/users');
     return response.data;
   },
 
-  getUserById: async (id: number): Promise<User> => {
+  getUserById: async (id: number): Promise<UserResponse> => {
     const response = await api.get(`/users/${id}`);
     return response.data;
   },
 
-  getUsersByRole: async (role: string): Promise<User[]> => {
+  getUserByUsername: async (username: string): Promise<UserResponse> => {
+    const response = await api.get(`/users/username/${username}`);
+    return response.data;
+  },
+
+  getUserByEmail: async (email: string): Promise<UserResponse> => {
+    const response = await api.get(`/users/email/${email}`);
+    return response.data;
+  },
+
+  getUsersByRole: async (role: string): Promise<UserResponse[]> => {
     const response = await api.get(`/users/role/${role}`);
     return response.data;
   },
@@ -184,23 +182,42 @@ export const ngoAPI = {
     return response.data;
   },
 
+  getNgoByEmail: async (email: string): Promise<NGO> => {
+    const response = await api.get(`/ngos/email/${email}`);
+    return response.data;
+  },
+
   getNearbyNgos: async (latitude: number, longitude: number, radius?: number): Promise<NGO[]> => {
     const response = await api.get(`/ngos/nearby?latitude=${latitude}&longitude=${longitude}&radius=${radius || 0.1}`);
     return response.data;
   },
 
-  createNgo: async (data: Omit<NGO, 'id' | 'isActive' | 'createdAt' | 'updatedAt'>): Promise<NGO> => {
+  createNgo: async (data: NgoRequest): Promise<NGO> => {
     const response = await api.post('/ngos', data);
     return response.data;
   },
 
-  updateNgo: async (id: number, data: Partial<NGO>): Promise<NGO> => {
+  updateNgo: async (id: number, data: NgoRequest): Promise<NGO> => {
     const response = await api.put(`/ngos/${id}`, data);
     return response.data;
   },
 
   deactivateNgo: async (id: number): Promise<void> => {
     await api.delete(`/ngos/${id}`);
+  },
+};
+
+// Upload API
+export const uploadAPI = {
+  uploadImage: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.url;
   },
 };
 

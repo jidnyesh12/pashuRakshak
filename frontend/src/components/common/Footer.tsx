@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer: React.FC = () => {
@@ -6,26 +7,15 @@ const Footer: React.FC = () => {
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Logo and Description */}
-          <div className="col-span-1 md:col-span-2">
+          {/* Brand */}
+          <div className="col-span-1">
             <div className="flex items-center space-x-2 mb-4">
-              <Heart className="h-8 w-8 text-primary-400" />
-              <span className="text-xl font-bold">PashuRakshak</span>
+              <Heart className="h-8 w-8 text-purple-400" />
+              <span className="text-2xl font-bold">PashuRakshak</span>
             </div>
-            <p className="text-gray-300 mb-4">
-              Dedicated to rescuing and caring for injured animals. Together, we can make a difference 
-              in the lives of our furry friends who need our help the most.
+            <p className="text-gray-400 text-sm">
+              Protecting and rescuing animals across India, one life at a time.
             </p>
-            <div className="flex space-x-4">
-              <div className="flex items-center space-x-2 text-gray-300">
-                <Phone className="h-4 w-4" />
-                <span>+91-9876543210</span>
-              </div>
-              <div className="flex items-center space-x-2 text-gray-300">
-                <Mail className="h-4 w-4" />
-                <span>help@pashurakshak.org</span>
-              </div>
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -33,60 +23,68 @@ const Footer: React.FC = () => {
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <a href="/report" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <Link to="/" className="text-gray-400 hover:text-purple-400 transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link to="/report-animal" className="text-gray-400 hover:text-purple-400 transition-colors">
                   Report Animal
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/track" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <Link to="/track-report" className="text-gray-400 hover:text-purple-400 transition-colors">
                   Track Report
-                </a>
-              </li>
-              <li>
-                <a href="/ngos" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Find NGOs
-                </a>
-              </li>
-              <li>
-                <a href="/volunteer" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Volunteer
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Contact */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Support</h3>
+            <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
+            <ul className="space-y-2 text-gray-400 text-sm">
+              <li className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                support@pashurakshak.com
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                +91 1234567890
+              </li>
+              <li className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Mumbai, Maharashtra, India
+              </li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <a href="/help" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Help Center
-                </a>
-              </li>
-              <li>
-                <a href="/contact" className="text-gray-300 hover:text-primary-400 transition-colors">
-                  Contact Us
-                </a>
-              </li>
-              <li>
-                <a href="/privacy" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">
                   Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="/terms" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">
                   Terms of Service
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">
+                  Cookie Policy
                 </a>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p className="text-gray-400">
-            © 2024 PashuRakshak. All rights reserved. Made with ❤️ for animals in need.
-          </p>
+        {/* Bottom Bar */}
+        <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400 text-sm">
+          <p>&copy; {new Date().getFullYear()} PashuRakshak. All rights reserved.</p>
         </div>
       </div>
     </footer>

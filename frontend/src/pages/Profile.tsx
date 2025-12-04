@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Calendar, Shield, Save } from 'lucide-react';
-import Layout from '../components/common/Layout';
+import { User, Mail, Phone, Calendar, Shield, Save, Lock } from 'lucide-react';
+import DashboardLayout from '../components/layout/DashboardLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
 import { userAPI } from '../utils/api';
 import toast from 'react-hot-toast';
-import type { User as UserType, UpdateUserRequest, ChangePasswordRequest } from '../types';
+import type { User as UserType } from '../types';
 
 const Profile: React.FC = () => {
-  const { user, updateUser } = useAuth();
+  const { updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserType | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -86,261 +86,280 @@ const Profile: React.FC = () => {
 
   if (loading && !profileData) {
     return (
-      <Layout>
-        <div className="flex justify-center items-center min-h-screen">
+      <DashboardLayout>
+        <div className="flex justify-center items-center h-[60vh]">
           <LoadingSpinner size="lg" />
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-            <p className="text-gray-600">Manage your account information and preferences</p>
+    <DashboardLayout>
+      {/* Hero Section */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-600 to-indigo-600 p-8 mb-10 text-white shadow-xl">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white opacity-10 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-64 w-64 rounded-full bg-purple-400 opacity-10 blur-3xl"></div>
+        
+        <div className="relative z-10 flex items-center gap-6">
+          <div className="h-24 w-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl font-bold border-4 border-white/30 shadow-inner">
+            {profileData?.fullName?.charAt(0) || 'U'}
           </div>
+          <div>
+            <h1 className="text-3xl font-bold mb-1">{profileData?.fullName}</h1>
+            <p className="text-purple-100 flex items-center gap-2">
+              <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                {profileData?.roles?.[0] || 'User'}
+              </span>
+              <span className="text-sm opacity-80">
+                Member since {new Date(profileData?.createdAt || '').getFullYear()}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Profile Info Card */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="text-center">
-                  <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <User className="h-10 w-10 text-primary-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">{profileData?.fullName}</h3>
-                  <p className="text-gray-600">@{profileData?.username}</p>
-                  
-                  <div className="mt-4 space-y-2">
-                    {profileData?.roles?.map((role) => (
-                      <span
-                        key={role}
-                        className="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full"
-                      >
-                        {role}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex items-center justify-center text-sm text-gray-500">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Joined {new Date(profileData?.createdAt || '').toLocaleDateString()}
-                    </div>
-                  </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - Profile Summary */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h3 className="font-bold text-gray-900 mb-4">Contact Details</h3>
+            <div className="space-y-4">
+              <div className="flex items-center p-3 bg-gray-50 rounded-xl">
+                <div className="p-2 bg-white rounded-lg mr-3 shadow-sm">
+                  <Mail className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Email Address</p>
+                  <p className="text-sm font-medium text-gray-900 break-all">{profileData?.email}</p>
                 </div>
               </div>
-            </div>
-
-            {/* Profile Form */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Personal Information */}
-              <div className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
-                  {!isEditing && (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="text-primary-600 hover:text-primary-700 font-medium"
-                    >
-                      Edit
-                    </button>
-                  )}
+              <div className="flex items-center p-3 bg-gray-50 rounded-xl">
+                <div className="p-2 bg-white rounded-lg mr-3 shadow-sm">
+                  <Phone className="h-5 w-5 text-purple-600" />
                 </div>
-                
-                <div className="p-6">
-                  {isEditing ? (
-                    <form onSubmit={handleUpdateProfile} className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Full Name
-                        </label>
-                        <input
-                          type="text"
-                          value={profileForm.fullName}
-                          onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          value={profileForm.email}
-                          onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Phone
-                        </label>
-                        <input
-                          type="tel"
-                          value={profileForm.phone}
-                          onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        />
-                      </div>
-
-                      <div className="flex space-x-3">
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center"
-                        >
-                          {loading ? <LoadingSpinner size="sm" /> : <Save className="h-4 w-4" />}
-                          <span className="ml-2">Save Changes</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsEditing(false);
-                            setProfileForm({
-                              fullName: profileData?.fullName || '',
-                              email: profileData?.email || '',
-                              phone: profileData?.phone || ''
-                            });
-                          }}
-                          className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center">
-                        <User className="h-5 w-5 text-gray-400 mr-3" />
-                        <div>
-                          <p className="text-sm text-gray-600">Full Name</p>
-                          <p className="font-medium">{profileData?.fullName}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center">
-                        <Mail className="h-5 w-5 text-gray-400 mr-3" />
-                        <div>
-                          <p className="text-sm text-gray-600">Email</p>
-                          <p className="font-medium">{profileData?.email}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center">
-                        <Phone className="h-5 w-5 text-gray-400 mr-3" />
-                        <div>
-                          <p className="text-sm text-gray-600">Phone</p>
-                          <p className="font-medium">{profileData?.phone || 'Not provided'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                <div>
+                  <p className="text-xs text-gray-500">Phone Number</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData?.phone || 'Not provided'}</p>
                 </div>
               </div>
-
-              {/* Security Settings */}
-              <div className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-gray-900">Security Settings</h2>
-                  {!showPasswordForm && (
-                    <button
-                      onClick={() => setShowPasswordForm(true)}
-                      className="text-primary-600 hover:text-primary-700 font-medium"
-                    >
-                      Change Password
-                    </button>
-                  )}
+              <div className="flex items-center p-3 bg-gray-50 rounded-xl">
+                <div className="p-2 bg-white rounded-lg mr-3 shadow-sm">
+                  <Calendar className="h-5 w-5 text-purple-600" />
                 </div>
-                
-                <div className="p-6">
-                  {showPasswordForm ? (
-                    <form onSubmit={handleChangePassword} className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Current Password
-                        </label>
-                        <input
-                          type="password"
-                          value={passwordForm.currentPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          New Password
-                        </label>
-                        <input
-                          type="password"
-                          value={passwordForm.newPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Confirm New Password
-                        </label>
-                        <input
-                          type="password"
-                          value={passwordForm.confirmPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          required
-                        />
-                      </div>
-
-                      <div className="flex space-x-3">
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center"
-                        >
-                          {loading ? <LoadingSpinner size="sm" /> : <Shield className="h-4 w-4" />}
-                          <span className="ml-2">Update Password</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowPasswordForm(false);
-                            setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                          }}
-                          className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <div className="flex items-center">
-                      <Shield className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <p className="text-sm text-gray-600">Password</p>
-                        <p className="font-medium">••••••••</p>
-                      </div>
-                    </div>
-                  )}
+                <div>
+                  <p className="text-xs text-gray-500">Joined On</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {new Date(profileData?.createdAt || '').toLocaleDateString()}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Right Column - Forms */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Edit Profile */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <User className="h-5 w-5 text-purple-600" />
+                Personal Information
+              </h2>
+              {!isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-sm font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  Edit Details
+                </button>
+              )}
+            </div>
+            
+            <div className="p-6">
+              {isEditing ? (
+                <form onSubmit={handleUpdateProfile} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        value={profileForm.fullName}
+                        onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                      <input
+                        type="tel"
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                      <input
+                        type="email"
+                        value={profileForm.email}
+                        onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditing(false);
+                        setProfileForm({
+                          fullName: profileData?.fullName || '',
+                          email: profileData?.email || '',
+                          phone: profileData?.phone || ''
+                        });
+                      }}
+                      className="px-4 py-2 text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium flex items-center shadow-sm shadow-purple-200"
+                    >
+                      {loading ? <LoadingSpinner size="sm" /> : <Save className="h-4 w-4 mr-2" />}
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Full Name</p>
+                    <p className="text-gray-900 font-medium">{profileData?.fullName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Phone Number</p>
+                    <p className="text-gray-900 font-medium">{profileData?.phone || 'Not provided'}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Email Address</p>
+                    <p className="text-gray-900 font-medium">{profileData?.email}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Security Settings */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Shield className="h-5 w-5 text-purple-600" />
+                Security Settings
+              </h2>
+              {!showPasswordForm && (
+                <button
+                  onClick={() => setShowPasswordForm(true)}
+                  className="text-sm font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  Change Password
+                </button>
+              )}
+            </div>
+            
+            <div className="p-6">
+              {showPasswordForm ? (
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="password"
+                          value={passwordForm.currentPassword}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                          className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <input
+                            type="password"
+                            value={passwordForm.newPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <input
+                            type="password"
+                            value={passwordForm.confirmPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPasswordForm(false);
+                        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                      }}
+                      className="px-4 py-2 text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium flex items-center shadow-sm shadow-purple-200"
+                    >
+                      {loading ? <LoadingSpinner size="sm" /> : <Shield className="h-4 w-4 mr-2" />}
+                      Update Password
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm">
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Password</p>
+                      <p className="text-xs text-gray-500">Last changed recently</p>
+                    </div>
+                  </div>
+                  <div className="text-gray-400 font-mono text-sm">••••••••</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 

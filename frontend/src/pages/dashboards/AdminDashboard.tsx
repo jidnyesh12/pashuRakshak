@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Building2, FileText, TrendingUp, Trash2, UserPlus, UserMinus, Plus } from 'lucide-react';
+import { Users, Building2, FileText, TrendingUp, Trash2, UserPlus, UserMinus } from 'lucide-react';
 import Layout from '../../components/common/Layout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import ReportModal from '../../components/common/ReportModal';
 import { useAuth } from '../../context/AuthContext';
 import { userAPI, reportsAPI, ngoAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
-import type { User, AnimalReport, NGO } from '../../types';
+import type { User, AnimalReport } from '../../types';
 
 const AdminDashboard: React.FC = () => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState<User[]>([]);
     const [reports, setReports] = useState<AnimalReport[]>([]);
-    const [ngos, setNgos] = useState<NGO[]>([]);
     const [stats, setStats] = useState({
         totalUsers: 0,
         totalReports: 0,
@@ -35,7 +33,6 @@ const AdminDashboard: React.FC = () => {
 
             setUsers(usersData);
             setReports(reportsData);
-            setNgos(ngosData);
 
             setStats({
                 totalUsers: usersData.length,
@@ -186,11 +183,11 @@ const AdminDashboard: React.FC = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${userData.isActive
+                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${userData.enabled
                                                     ? 'bg-green-100 text-green-800'
                                                     : 'bg-red-100 text-red-800'
                                                     }`}>
-                                                    {userData.isActive ? 'Active' : 'Inactive'}
+                                                    {userData.enabled ? 'Active' : 'Inactive'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -199,7 +196,7 @@ const AdminDashboard: React.FC = () => {
                                                         onClick={() => handleToggleUserStatus(userData.id)}
                                                         className="text-blue-600 hover:text-blue-900"
                                                     >
-                                                        {userData.isActive ? <UserMinus className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+                                                        {userData.enabled ? <UserMinus className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteUser(userData.id)}

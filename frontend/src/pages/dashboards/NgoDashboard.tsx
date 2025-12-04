@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Clock, Heart, CheckCircle, AlertTriangle, Users } from 'lucide-react';
+import { MapPin, Clock, CheckCircle, AlertTriangle, Users } from 'lucide-react';
 import Layout from '../../components/common/Layout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';

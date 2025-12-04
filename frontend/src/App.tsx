@@ -1,16 +1,22 @@
-import React from 'react';
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 
 // Pages
 import Home from './pages/Home';
+
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
 import UserDashboard from './pages/dashboards/UserDashboard';
 import AdminDashboard from './pages/dashboards/AdminDashboard';
 import NgoDashboard from './pages/dashboards/NgoDashboard';
 import Profile from './pages/Profile';
+import UserManagement from './pages/UserManagement';
+import NgoManagement from './pages/NgoManagement';
+import ReportAnimal from './pages/ReportAnimal';
+import TrackReport from './pages/TrackReport';
+import Emergency from './pages/Emergency';
 import Unauthorized from './pages/Unauthorized';
 
 // Protected Route Component
@@ -91,6 +97,30 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            
+            {/* Admin Management Routes */}
+            <Route 
+              path="/admin/users" 
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <UserManagement />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/admin/ngos" 
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <NgoManagement />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Public Report Routes */}
+            <Route path="/report-animal" element={<ReportAnimal />} />
+            <Route path="/track-report" element={<TrackReport />} />
+            <Route path="/emergency" element={<Emergency />} />
             
             {/* Redirect /dashboard based on user role */}
             <Route 

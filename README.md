@@ -1,117 +1,201 @@
-# 🐾 Pashu Rakshak
+# 🐾 Pashu Rakshak - Animal Rescue Platform
 
-## 🎯 Aim
-To create a streamlined web application that connects citizens with government agencies and NGOs to provide rapid assistance to injured or distressed animals.
+A comprehensive platform for reporting and managing animal rescue cases with **real-time location detection**, **professional Cloudinary image upload**, and **complete NGO coordination**.
 
----
+## 🚀 **FULLY IMPLEMENTED FEATURES**
 
-## 🚀 Overview
-**Pashu Rakshak** is a web-based platform that bridges the gap between citizens and animal rescue organizations.  
-It allows users to report injured or distressed animals, automatically notifies nearby NGOs or government agencies, and tracks rescue progress in real time.  
-The system ensures **faster response**, **better coordination**, and **efficient animal rescue operations**.
+### ✅ **Real Location Detection**
+- Browser geolocation API with address resolution
+- Manual location entry fallback
+- Reverse geocoding (coordinates to address)
+- HTTPS/localhost compatibility
 
----
+### ✅ **Professional Image Upload**
+- **Real Cloudinary integration** (no mocks)
+- Multiple image support (max 5 images, 5MB each)
+- Server-side processing and optimization
+- Image preview and management
 
-## 🛠️ Technology Stack
+### ✅ **Complete Backend**
+- Spring Boot 3.5.7 with Java 17
+- JWT authentication and security
+- PostgreSQL database integration
+- Cloudinary SDK integration
+- File upload validation
 
-### **Frontend**
-- **Framework:** React.js  
-- **Key Libraries:**
-  - `React Router` – Navigation between pages (Home, Report, Status)
-  - `Axios` – API communication with the backend
-  - `Leaflet` / `Mapbox` – Map display and geolocation handling
-  - `Tailwind CSS` – Modern and responsive UI design
+### ✅ **Full Frontend**
+- React 18 with TypeScript
+- Responsive design with Tailwind CSS
+- Real-time form validation
+- Progress indicators and error handling
+
+## 🛠️ **Tech Stack**
 
 ### **Backend**
-- **Framework:** Spring Boot (Java)
-- **Key Dependencies:**
-  - `Spring Web` – For building RESTful APIs
-  - `Spring Data JPA` – For database operations
-  - `Spring Security` – For authentication and authorization (future integration)
+- **Java 17** with **Spring Boot 3.5.7**
+- **Spring Security** with JWT authentication
+- **Spring Data JPA** with PostgreSQL
+- **Cloudinary SDK** for image storage
+- **Maven** for dependency management
 
-### **Database**
-- **PostgreSQL** with **PostGIS Extension**  
-  Used to efficiently store and query geographic data (e.g., animal and NGO locations).
+### **Frontend**
+- **React 18** with **TypeScript**
+- **Vite** for build tooling
+- **Tailwind CSS** for styling
+- **React Router** for navigation
+- **React Hook Form** for form management
 
-### **Deployment**
-- **Containerization:** Docker  
-- **Hosting:** Render / Railway (for CI/CD and scalability)
+## 🚀 **Quick Start**
 
----
+### **1. Prerequisites**
+- Java 17 or higher
+- Node.js 16 or higher
+- Maven 3.6 or higher
+- **Cloudinary Account** (free at [cloudinary.com](https://cloudinary.com))
 
-## 🌟 Core Features
+### **2. Cloudinary Setup**
+1. Sign up at [https://cloudinary.com/users/register/free](https://cloudinary.com/users/register/free)
+2. Go to Dashboard and copy:
+   - Cloud Name
+   - API Key
+   - API Secret
 
-### **For Citizens**
-#### 🐶 Report an Injured Animal
-- Form with fields: Animal type, injury description, and additional notes  
-- Upload multiple images of the animal and surroundings  
-- Auto-capture or manually select geolocation on a map  
+### **3. Configure Backend**
 
-#### 🔍 Track Report Status
-- Unique tracking ID for each report  
-- Real-time status updates:
-  - `Report Submitted`
-  - `Searching for Help`
-  - `Help is on the Way (NGO Name)`
-  - `Case Resolved`
+Edit `backend/src/main/resources/application.properties`:
 
----
+```properties
+# Replace with your actual Cloudinary credentials
+cloudinary.cloud-name=YOUR_CLOUDINARY_CLOUD_NAME
+cloudinary.api-key=YOUR_CLOUDINARY_API_KEY
+cloudinary.api-secret=YOUR_CLOUDINARY_API_SECRET
+```
 
-### **For NGOs & Government Agencies**
-#### 🗺️ Dashboard
-- View all reports on a list or interactive map  
-- Access details like location, photos, and descriptions  
+### **4. Start Backend**
 
-#### 🔔 Notifications
-- Receive real-time alerts (email, SMS, or push) for nearby cases  
+```bash
+cd backend
+mvn clean install
+mvn spring-boot:run
+```
 
-#### ✅ Accept & Manage Cases
-- First NGO to accept a case gets it assigned (prevents duplication)  
-- Update rescue status:
-  - `Team Dispatched`
-  - `Animal Rescued`
-  - `Case Closed`
+Backend available at: `http://localhost:8080`
 
----
+### **5. Start Frontend**
 
-## 🔄 Application Workflow
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-1. A citizen finds an injured animal.  
-2. They open the **Pashu Rakshak** web app.  
-3. They fill the **Report Form**, upload photos, and confirm the location.  
-4. Data is sent to the **Spring Boot backend**, which stores it in **PostgreSQL + PostGIS**.  
-5. The backend identifies NGOs and government agencies within a specific radius (e.g., 10–15 km).  
-6. Notifications are sent to those nearby organizations.  
-7. An NGO logs in and **accepts the case**, which locks it for others.  
-8. The citizen tracks the status in real time using their **tracking ID**.  
-9. The NGO updates the case progress until **resolved**.  
-10. The citizen is notified once the case is **closed**.
+Frontend available at: `http://localhost:5173`
 
----
+## 🧪 **Test the Application**
 
-## 🧱 Future Enhancements
-- Role-based authentication for NGOs and government users  
-- AI-based animal injury classification from uploaded images  
-- Mobile app integration  
-- Multilingual support for broader accessibility  
+### **Test Location Detection:**
+1. Go to `http://localhost:5173/report-animal`
+2. Click "Get Current Location"
+3. Allow location access when prompted
+4. Should display your address
 
----
+### **Test Image Upload:**
+1. Select 1-5 images (max 5MB each)
+2. Images upload to Cloudinary
+3. See preview thumbnails
+4. Submit complete report
 
-## 📦 Deployment Instructions (Planned)
-1. **Containerize the app** using Docker  
-2. **Push the code to GitHub**  
-3. **Deploy on Render/Railway** with automatic build and deployment  
-4. **Connect PostgreSQL** database instance  
-5. **Monitor logs** and performance using the platform dashboard  
+### **Test Report Tracking:**
+1. Note the tracking ID after submission
+2. Go to `/track-report`
+3. Enter tracking ID to view full report
 
----
+## 🔧 **Troubleshooting**
 
-## 👨‍💻 Contributors
+### **Location Issues:**
+- **"Location information is unavailable"**:
+  - Allow location access in browser
+  - Use HTTPS in production (localhost works for development)
+  - Enable device location services
+  - Use manual location entry as fallback
+
+### **Image Upload Issues:**
+- **Upload fails**: Check Cloudinary credentials in `application.properties`
+- **File too large**: Max 5MB per image
+- **Invalid file**: Only image files allowed
+
+## 🔐 **Default Test Accounts**
+
+```
+Admin Account:
+Username: admin
+Password: admin123
+
+NGO Account:
+Username: ngouser  
+Password: ngo123
+
+Regular User:
+Username: testuser
+Password: user123
+```
+
+## 📊 **API Endpoints**
+
+### **Authentication**
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/signin` - User login
+
+### **Reports**
+- `POST /api/reports` - Create report
+- `GET /api/reports/track/{trackingId}` - Track report
+
+### **File Upload (Cloudinary)**
+- `POST /api/upload/image` - Upload single image
+- `POST /api/upload/images` - Upload multiple images
+- `DELETE /api/upload/image` - Delete image
+
+### **Users & NGOs**
+- `GET /api/users/profile` - Get user profile
+- `GET /api/ngos` - Get all NGOs
+- `GET /api/ngos/nearby` - Find nearby NGOs
+
+## 🌐 **Production Deployment**
+
+### **Backend:**
+1. Update `application.properties` with production database
+2. Set production Cloudinary credentials
+3. Build: `mvn clean package`
+4. Deploy JAR file
+
+### **Frontend:**
+1. Update `.env` with production API URL
+2. Build: `npm run build`
+3. Deploy `dist` folder to static hosting
+
+**Important**: Use HTTPS in production for location services to work.
+
+## 📚 **Documentation**
+
+- [**Cloudinary Setup Guide**](CLOUDINARY_SETUP.md) - Complete Cloudinary configuration
+- [**Complete Setup Guide**](SETUP_COMPLETE.md) - Comprehensive setup instructions
+
+## 🎯 **Core Workflow**
+
+1. **Citizen** finds injured animal
+2. Opens **Pashu Rakshak** web app
+3. **Reports** with location detection and image upload
+4. **Backend** stores in PostgreSQL and uploads images to Cloudinary
+5. **NGOs** receive notifications and can accept cases
+6. **Real-time tracking** with unique tracking ID
+7. **Status updates** until case resolution
+
+## 👨‍💻 **Contributors**
 - **Jidnyesh Suryawanshi** – Developer & Project Lead
 
----
-
-## 🐕 License
+## 🐕 **License**
 This project is licensed under the **MIT License** – feel free to use and modify with attribution.
 
 ---
+
+**🎉 Ready for production use with real Cloudinary integration and location services!**
