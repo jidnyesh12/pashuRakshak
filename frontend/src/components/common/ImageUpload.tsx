@@ -41,21 +41,26 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
 
     try {
-      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
       const response = await axios.post(
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        formData
+        `${API_BASE_URL}/upload`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
       );
       
-      const url = response.data.secure_url;
+      const url = response.data.url;
       onUpload(url);
       toast.success('Image uploaded successfully');
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload image. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Failed to upload image. Please try again.';
+      toast.error(errorMessage);
       setPreview(undefined);
       onRemove();
     } finally {
