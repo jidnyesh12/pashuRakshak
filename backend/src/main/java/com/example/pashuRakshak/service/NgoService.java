@@ -22,7 +22,7 @@ public class NgoService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired(required = false)
+    @Autowired
     private EmailService emailService;
 
     public Ngo createNgo(NgoRequest request) {
