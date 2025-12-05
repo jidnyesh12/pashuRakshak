@@ -4,6 +4,8 @@ import TopHeader from './TopHeader';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+  title?: string;
+  role?: string;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
@@ -11,13 +13,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
-      
-      <TopHeader 
-        onMenuClick={() => setIsSidebarOpen(true)} 
+
+      <TopHeader
+        onMenuClick={() => setIsSidebarOpen(true)}
       />
 
       <main className="lg:pl-64 pt-16 min-h-screen transition-all duration-300">

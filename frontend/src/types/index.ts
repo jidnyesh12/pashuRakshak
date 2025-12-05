@@ -8,9 +8,10 @@ export interface User {
     enabled: boolean;
     createdAt: string;
     updatedAt: string;
+    ngoId?: number;
 }
 
-export type UserRole = 'USER' | 'NGO' | 'ADMIN';
+export type UserRole = 'USER' | 'NGO' | 'ADMIN' | 'NGO_WORKER';
 
 export interface LoginRequest {
     username: string;
@@ -40,6 +41,7 @@ export interface JwtResponse {
     username: string;
     email: string;
     fullName: string;
+    ngoId?: number;
     roles: UserRole[];
 }
 
@@ -66,6 +68,8 @@ export interface AnimalReport {
     assignedNgoId?: number;
     assignedNgoName?: string;
     assignedNgo?: string;
+    assignedWorkerId?: number;
+    assignedWorkerName?: string;
 }
 
 export type ReportStatus =
@@ -95,6 +99,7 @@ export type VerificationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface NGO {
     id: number;
+    uniqueId?: string;
     name: string;
     email: string;
     phone: string;

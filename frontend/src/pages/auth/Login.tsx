@@ -34,21 +34,22 @@ const Login: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await authAPI.login(data);
-      
+
       // Store auth data
       setAuthData(response);
-      
+
       // Update auth context
       login({
         id: response.id,
         username: response.username,
         email: response.email,
         fullName: response.fullName,
+        ngoId: response.ngoId,
         roles: response.roles,
       }, response.token);
 
       toast.success('Login successful!');
-      
+
       // Redirect to the page they were trying to access, or dashboard based on role
       const from = location.state?.from?.pathname;
       if (from && from !== '/') {
@@ -59,6 +60,8 @@ const Login: React.FC = () => {
           navigate('/admin/dashboard');
         } else if (response.roles.includes('NGO')) {
           navigate('/ngo/dashboard');
+        } else if (response.roles.includes('NGO_WORKER')) {
+          navigate('/worker/dashboard');
         } else {
           navigate('/user/dashboard');
         }

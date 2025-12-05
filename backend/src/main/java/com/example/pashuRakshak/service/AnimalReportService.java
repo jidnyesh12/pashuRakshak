@@ -138,6 +138,30 @@ public class AnimalReportService {
         return Optional.empty();
     }
 
+    public Optional<ReportResponse> assignReportToWorker(String trackingId, Long workerId, String workerName) {
+        Optional<AnimalReport> reportOpt = reportRepository.findByTrackingId(trackingId);
+        if (reportOpt.isPresent()) {
+            AnimalReport report = reportOpt.get();
+            // Only allow assignment if report is assigned to an NGO
+            if (report.getAssignedNgoId() != null) {
+                report.setAssignedWorkerId(workerId);
+                report.setAssignedWorkerName(workerName);
+                report.setStatus(ReportStatus.TEAM_DISPATCHED);
+                report.setUpdatedAt(LocalDateTime.now());
+
+                AnimalReport savedReport = reportRepository.save(report);
+                return Optional.of(convertToResponse(savedReport));
+            }
+        }
+        return Optional.empty();
+    }
+
+    public List<ReportResponse> getReportsAssignedToWorker(Long workerId) {
+        return reportRepository.findByAssignedWorkerId(workerId).stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
     private String generateTrackingId() {
         return "PR-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
@@ -162,6 +186,8 @@ public class AnimalReportService {
         response.setUpdatedAt(report.getUpdatedAt());
         response.setAssignedNgoId(report.getAssignedNgoId());
         response.setAssignedNgoName(report.getAssignedNgoName());
+        response.setAssignedWorkerId(report.getAssignedWorkerId());
+        response.setAssignedWorkerName(report.getAssignedWorkerName());
         return response;
     }
 }

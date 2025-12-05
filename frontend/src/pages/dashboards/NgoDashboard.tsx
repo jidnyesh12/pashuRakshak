@@ -15,16 +15,17 @@ import {
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
-import { reportsAPI } from '../../utils/api';
+import { reportsAPI, ngoAPI } from '../../utils/api';
 import { getStatusColor, getStatusText } from '../../utils/auth';
 import toast from 'react-hot-toast';
-import type { AnimalReport } from '../../types';
+import type { AnimalReport, UserResponse } from '../../types';
 
 const NgoDashboard: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [availableReports, setAvailableReports] = useState<AnimalReport[]>([]);
   const [myReports, setMyReports] = useState<AnimalReport[]>([]);
+  const [workers, setWorkers] = useState<UserResponse[]>([]);
   const [stats, setStats] = useState({
     totalAssigned: 0,
     completed: 0,
@@ -38,13 +39,15 @@ const NgoDashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [available, assigned] = await Promise.all([
+      const [available, assigned, ngoWorkers] = await Promise.all([
         reportsAPI.getAvailableReports(),
-        user?.id ? reportsAPI.getReportsByNgo(user.id) : Promise.resolve([])
+        user?.id ? reportsAPI.getReportsByNgo(user.id) : Promise.resolve([]),
+        user?.id ? ngoAPI.getWorkers(user.id) : Promise.resolve([])
       ]);
 
       setAvailableReports(available);
       setMyReports(assigned);
+      setWorkers(ngoWorkers);
 
       setStats({
         totalAssigned: assigned.length,
@@ -81,6 +84,19 @@ const NgoDashboard: React.FC = () => {
       loadDashboardData();
     } catch (error) {
       toast.error('Failed to update status');
+    }
+  };
+
+  const handleAssignWorker = async (trackingId: string, workerId: string) => {
+    try {
+      const worker = workers.find(w => w.id === parseInt(workerId));
+      if (!worker) return;
+
+      await reportsAPI.assignReport(trackingId, worker.id, worker.fullName);
+      toast.success(`Assigned to ${worker.fullName}`);
+      loadDashboardData();
+    } catch (error) {
+      toast.error('Failed to assign worker');
     }
   };
 
@@ -253,47 +269,93 @@ const NgoDashboard: React.FC = () => {
 
                           {/* Action Buttons */}
                           {report.status !== 'CASE_RESOLVED' && (
-                            <div className="flex flex-wrap gap-2 mt-3">
-                              {report.status === 'SUBMITTED' && (
-                                <button
-                                  onClick={() => handleUpdateStatus(report.trackingId, 'SEARCHING_FOR_HELP')}
-                                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-                                >
-                                  Start Search
-                                </button>
+                            <>
+                              {!report.assignedWorkerId ? (
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                  {report.status === 'SUBMITTED' && (
+                                    <button
+                                      onClick={() => handleUpdateStatus(report.trackingId, 'SEARCHING_FOR_HELP')}
+                                      className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                                    >
+                                      Start Search
+                                    </button>
+                                  )}
+                                  {report.status === 'SEARCHING_FOR_HELP' && (
+                                    <button
+                                      onClick={() => handleUpdateStatus(report.trackingId, 'HELP_ON_THE_WAY')}
+                                      className="px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors shadow-sm"
+                                    >
+                                      Help on Way
+                                    </button>
+                                  )}
+                                  {report.status === 'HELP_ON_THE_WAY' && (
+                                    <button
+                                      onClick={() => handleUpdateStatus(report.trackingId, 'TEAM_DISPATCHED')}
+                                      className="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors shadow-sm"
+                                    >
+                                      Team Dispatched
+                                    </button>
+                                  )}
+                                  {report.status === 'TEAM_DISPATCHED' && (
+                                    <button
+                                      onClick={() => handleUpdateStatus(report.trackingId, 'ANIMAL_RESCUED')}
+                                      className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
+                                    >
+                                      Animal Rescued
+                                    </button>
+                                  )}
+                                  {report.status === 'ANIMAL_RESCUED' && (
+                                    <button
+                                      onClick={() => handleUpdateStatus(report.trackingId, 'CASE_RESOLVED')}
+                                      className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                                    >
+                                      Mark Resolved
+                                    </button>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100 flex items-center gap-2">
+                                  <Users className="h-4 w-4 text-purple-600" />
+                                  <span className="text-sm text-gray-600 font-medium">
+                                    Managed by <span className="text-purple-700 font-bold">{report.assignedWorkerName}</span>
+                                  </span>
+                                </div>
                               )}
-                              {report.status === 'SEARCHING_FOR_HELP' && (
-                                <button
-                                  onClick={() => handleUpdateStatus(report.trackingId, 'HELP_ON_THE_WAY')}
-                                  className="px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors shadow-sm"
+                            </>
+                          )}
+
+                          {/* Worker Assignment UI */}
+                          {report.status !== 'CASE_RESOLVED' && (
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                  Assigned To:
+                                </span>
+                                {report.assignedWorkerName ? (
+                                  <span className="text-sm font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded">
+                                    {report.assignedWorkerName}
+                                  </span>
+                                ) : (
+                                  <span className="text-sm text-gray-400 italic">Unassigned</span>
+                                )}
+                              </div>
+
+                              <div className="flex gap-2">
+                                <select
+                                  className="text-sm border-gray-200 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                                  onChange={(e) => {
+                                    if (e.target.value) handleAssignWorker(report.trackingId, e.target.value);
+                                  }}
+                                  value=""
                                 >
-                                  Help on Way
-                                </button>
-                              )}
-                              {report.status === 'HELP_ON_THE_WAY' && (
-                                <button
-                                  onClick={() => handleUpdateStatus(report.trackingId, 'TEAM_DISPATCHED')}
-                                  className="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors shadow-sm"
-                                >
-                                  Team Dispatched
-                                </button>
-                              )}
-                              {report.status === 'TEAM_DISPATCHED' && (
-                                <button
-                                  onClick={() => handleUpdateStatus(report.trackingId, 'ANIMAL_RESCUED')}
-                                  className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
-                                >
-                                  Animal Rescued
-                                </button>
-                              )}
-                              {report.status === 'ANIMAL_RESCUED' && (
-                                <button
-                                  onClick={() => handleUpdateStatus(report.trackingId, 'CASE_RESOLVED')}
-                                  className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
-                                >
-                                  Mark Resolved
-                                </button>
-                              )}
+                                  <option value="" disabled>Assign to Worker...</option>
+                                  {workers.map(worker => (
+                                    <option key={worker.id} value={worker.id}>
+                                      {worker.fullName}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -304,104 +366,105 @@ const NgoDashboard: React.FC = () => {
               )}
             </div>
           </div>
-
-          {/* Available Reports */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                New Alerts
-              </h2>
-              <span className="text-sm font-medium text-gray-500">{availableReports.length} Available</span>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              {availableReports.length === 0 ? (
-                <div className="p-12 text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-50 mb-6">
-                    <CheckCircle className="h-10 w-10 text-green-500" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">All clear!</h3>
-                  <p className="text-gray-500">
-                    There are no pending reports in your area.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-                  {availableReports.map((report) => (
-                    <div key={report.id} className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all bg-gray-50/50">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 text-xs font-bold rounded-md ${report.urgencyLevel === 'HIGH' ? 'bg-red-100 text-red-700' :
-                              report.urgencyLevel === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
-                                'bg-green-100 text-green-700'
-                            }`}>
-                            {report.urgencyLevel}
-                          </span>
-                          <span className="text-xs text-gray-500">#{report.trackingId}</span>
-                        </div>
-                        <span className="text-xs text-gray-400 flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {new Date(report.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-
-                      <h3 className="font-bold text-gray-900 mb-1 capitalize">{report.animalType}</h3>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{report.description}</p>
-
-                      <div className="flex items-center text-xs text-gray-500 mb-4">
-                        <MapPin className="h-3.5 w-3.5 mr-1 text-red-500" />
-                        <span className="truncate">{report.location}</span>
-                      </div>
-
-                      <button
-                        onClick={() => handleAcceptReport(report.trackingId)}
-                        className="w-full py-2.5 bg-white border border-emerald-600 text-emerald-600 font-medium rounded-lg hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2 group"
-                      >
-                        <span>Accept Case</span>
-                        <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
         </div>
 
-        {/* Sidebar Widgets */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="font-bold text-gray-900 mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <button className="w-full flex items-center p-3 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors group text-left">
-                <div className="p-2 bg-white rounded-lg mr-3 shadow-sm group-hover:scale-110 transition-transform">
-                  <Search className="h-5 w-5" />
-                </div>
-                <span className="font-medium">Find Nearby Cases</span>
-              </button>
-              <button className="w-full flex items-center p-3 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors group text-left">
-                <div className="p-2 bg-white rounded-lg mr-3 shadow-sm group-hover:scale-110 transition-transform">
-                  <TrendingUp className="h-5 w-5" />
-                </div>
-                <span className="font-medium">View Analytics</span>
-              </button>
-            </div>
+        {/* Available Reports */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              New Alerts
+            </h2>
+            <span className="text-sm font-medium text-gray-500">{availableReports.length} Available</span>
           </div>
 
-          {/* Impact Card */}
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-emerald-500 rounded-full opacity-20 blur-xl"></div>
-            <h3 className="font-bold text-lg mb-2 relative z-10">NGO Impact</h3>
-            <p className="text-gray-300 text-sm mb-4 relative z-10">
-              Your organization has saved {stats.completed} lives so far. Keep up the amazing work!
-            </p>
-            <div className="flex items-center gap-2 text-xs font-medium text-emerald-300 relative z-10">
-              <CheckCircle className="h-4 w-4" />
-              <span>Verified Partner</span>
-            </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {availableReports.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-50 mb-6">
+                  <CheckCircle className="h-10 w-10 text-green-500" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">All clear!</h3>
+                <p className="text-gray-500">
+                  There are no pending reports in your area.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                {availableReports.map((report) => (
+                  <div key={report.id} className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all bg-gray-50/50">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 text-xs font-bold rounded-md ${report.urgencyLevel === 'HIGH' ? 'bg-red-100 text-red-700' :
+                          report.urgencyLevel === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-green-100 text-green-700'
+                          }`}>
+                          {report.urgencyLevel}
+                        </span>
+                        <span className="text-xs text-gray-500">#{report.trackingId}</span>
+                      </div>
+                      <span className="text-xs text-gray-400 flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {new Date(report.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <h3 className="font-bold text-gray-900 mb-1 capitalize">{report.animalType}</h3>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{report.description}</p>
+
+                    <div className="flex items-center text-xs text-gray-500 mb-4">
+                      <MapPin className="h-3.5 w-3.5 mr-1 text-red-500" />
+                      <span className="truncate">{report.location}</span>
+                    </div>
+
+                    <button
+                      onClick={() => handleAcceptReport(report.trackingId)}
+                      className="w-full py-2.5 bg-white border border-emerald-600 text-emerald-600 font-medium rounded-lg hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2 group"
+                    >
+                      <span>Accept Case</span>
+                      <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Sidebar Widgets */}
+      <div className="space-y-6 mt-8">
+        {/* Quick Actions */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h3 className="font-bold text-gray-900 mb-4">Quick Actions</h3>
+          <div className="space-y-3">
+            <button className="w-full flex items-center p-3 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors group text-left">
+              <div className="p-2 bg-white rounded-lg mr-3 shadow-sm group-hover:scale-110 transition-transform">
+                <Search className="h-5 w-5" />
+              </div>
+              <span className="font-medium">Find Nearby Cases</span>
+            </button>
+            <button className="w-full flex items-center p-3 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors group text-left">
+              <div className="p-2 bg-white rounded-lg mr-3 shadow-sm group-hover:scale-110 transition-transform">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <span className="font-medium">View Analytics</span>
+            </button>
+
+          </div>
+        </div>
+
+        {/* Impact Card */}
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-emerald-500 rounded-full opacity-20 blur-xl"></div>
+          <h3 className="font-bold text-lg mb-2 relative z-10">NGO Impact</h3>
+          <p className="text-gray-300 text-sm mb-4 relative z-10">
+            Your organization has saved {stats.completed} lives so far. Keep up the amazing work!
+          </p>
+          <div className="flex items-center gap-2 text-xs font-medium text-emerald-300 relative z-10">
+            <CheckCircle className="h-4 w-4" />
+            <span>Verified Partner</span>
           </div>
         </div>
       </div>

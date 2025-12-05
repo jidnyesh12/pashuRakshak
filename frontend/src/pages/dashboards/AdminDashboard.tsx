@@ -3,13 +3,13 @@ import { Users, Building2, FileText, TrendingUp, Trash2, UserPlus, UserMinus, Us
 import Layout from '../../components/common/Layout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import NgoManagement from '../../components/admin/NgoManagement';
-import { useAuth } from '../../context/AuthContext';
+// import { useAuth } from '../../context/AuthContext';
 import { userAPI, reportsAPI, ngoAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import type { User, AnimalReport } from '../../types';
 
 const AdminDashboard: React.FC = () => {
-    const { user } = useAuth();
+    // const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'overview' | 'ngos' | 'users' | 'reports' | 'ngo-reps'>('overview');
     const [users, setUsers] = useState<User[]>([]);
@@ -98,55 +98,50 @@ const AdminDashboard: React.FC = () => {
                     <div className="flex gap-2 p-2">
                         <button
                             onClick={() => setActiveTab('overview')}
-                            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                                activeTab === 'overview'
-                                    ? 'bg-teal-500 text-white shadow-md'
-                                    : 'hover:bg-gray-100 text-gray-600'
-                            }`}
+                            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === 'overview'
+                                ? 'bg-teal-500 text-white shadow-md'
+                                : 'hover:bg-gray-100 text-gray-600'
+                                }`}
                         >
                             <TrendingUp className="w-5 h-5" />
                             Overview
                         </button>
                         <button
                             onClick={() => setActiveTab('ngos')}
-                            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                                activeTab === 'ngos'
-                                    ? 'bg-teal-500 text-white shadow-md'
-                                    : 'hover:bg-gray-100 text-gray-600'
-                            }`}
+                            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === 'ngos'
+                                ? 'bg-teal-500 text-white shadow-md'
+                                : 'hover:bg-gray-100 text-gray-600'
+                                }`}
                         >
                             <Building2 className="w-5 h-5" />
                             NGOs
                         </button>
                         <button
                             onClick={() => setActiveTab('users')}
-                            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                                activeTab === 'users'
-                                    ? 'bg-teal-500 text-white shadow-md'
-                                    : 'hover:bg-gray-100 text-gray-600'
-                            }`}
+                            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === 'users'
+                                ? 'bg-teal-500 text-white shadow-md'
+                                : 'hover:bg-gray-100 text-gray-600'
+                                }`}
                         >
                             <Users className="w-5 h-5" />
                             Users
                         </button>
                         <button
                             onClick={() => setActiveTab('reports')}
-                            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                                activeTab === 'reports'
-                                    ? 'bg-teal-500 text-white shadow-md'
-                                    : 'hover:bg-gray-100 text-gray-600'
-                            }`}
+                            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === 'reports'
+                                ? 'bg-teal-500 text-white shadow-md'
+                                : 'hover:bg-gray-100 text-gray-600'
+                                }`}
                         >
                             <FileText className="w-5 h-5" />
                             Reports
                         </button>
                         <button
                             onClick={() => setActiveTab('ngo-reps')}
-                            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                                activeTab === 'ngo-reps'
-                                    ? 'bg-teal-500 text-white shadow-md'
-                                    : 'hover:bg-gray-100 text-gray-600'
-                            }`}
+                            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === 'ngo-reps'
+                                ? 'bg-teal-500 text-white shadow-md'
+                                : 'hover:bg-gray-100 text-gray-600'
+                                }`}
                         >
                             <UserCheck className="w-5 h-5" />
                             NGO Reps
@@ -254,11 +249,10 @@ const AdminDashboard: React.FC = () => {
                                                 </td>
                                                 <td className="py-3 px-4">
                                                     <span
-                                                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                                            u.enabled
-                                                                ? 'bg-green-100 text-green-800'
-                                                                : 'bg-red-100 text-red-800'
-                                                        }`}
+                                                        className={`px-3 py-1 rounded-full text-xs font-medium ${u.enabled
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-red-100 text-red-800'
+                                                            }`}
                                                     >
                                                         {u.enabled ? 'Active' : 'Inactive'}
                                                     </span>

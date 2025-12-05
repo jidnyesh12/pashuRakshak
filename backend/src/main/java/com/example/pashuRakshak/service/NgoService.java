@@ -3,15 +3,18 @@ package com.example.pashuRakshak.service;
 import com.example.pashuRakshak.dto.NgoRequest;
 import com.example.pashuRakshak.entity.Ngo;
 import com.example.pashuRakshak.entity.User;
+import com.example.pashuRakshak.entity.UserRole;
 import com.example.pashuRakshak.entity.VerificationStatus;
 import com.example.pashuRakshak.repository.NgoRepository;
 import com.example.pashuRakshak.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class NgoService {
@@ -24,6 +27,9 @@ public class NgoService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public Ngo createNgo(NgoRequest request) {
         Ngo ngo = new Ngo();
@@ -82,6 +88,17 @@ public class NgoService {
         Optional<Ngo> ngoOpt = ngoRepository.findById(id);
         if (ngoOpt.isPresent()) {
             Ngo ngo = ngoOpt.get();
+
+            // Generate Unique ID if not present
+            if (ngo.getUniqueId() == null) {
+                long count = ngoRepository.count();
+                // Format: PR-NGO-AX001 (based on total count + 1)
+                // Note: Ideally, we should check for uniqueness or use a sequence, but count+1
+                // is a simple start per request
+                String generatedId = String.format("PR-NGO-AX%03d", count + 1);
+                ngo.setUniqueId(generatedId);
+            }
+
             ngo.setVerificationStatus(VerificationStatus.APPROVED);
             ngo.setIsActive(true);
             ngo.setVerifiedBy(adminId);
@@ -99,9 +116,8 @@ public class NgoService {
                 userRepository.save(user);
             }
 
-            if (emailService != null) {
-                emailService.sendNgoApprovalEmail(ngo.getEmail(), ngo.getName());
-            }
+            // Send approval email
+            emailService.sendNgoApprovalEmail(ngo.getEmail(), ngo.getName());
 
             return Optional.of(savedNgo);
         }
@@ -121,18 +137,8 @@ public class NgoService {
 
             Ngo savedNgo = ngoRepository.save(ngo);
 
-            // Also disable the corresponding User account
-            Optional<User> userOpt = userRepository.findByEmail(ngo.getEmail());
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                user.setEnabled(false);
-                user.setUpdatedAt(LocalDateTime.now());
-                userRepository.save(user);
-            }
-
-            if (emailService != null) {
-                emailService.sendNgoRejectionEmail(ngo.getEmail(), ngo.getName(), reason);
-            }
+            // Send rejection email
+            emailService.sendNgoRejectionEmail(ngo.getEmail(), ngo.getName(), reason);
 
             return Optional.of(savedNgo);
         }
@@ -199,5 +205,43 @@ public class NgoService {
 
         return new com.example.pashuRakshak.dto.NgoStatsResponse(
                 total, pending, approved, rejected, active, inactive);
+    }
+
+    public User addWorker(Long ngoId, String name, String email, String phone, Integer age, String gender) {
+        Optional<Ngo> ngoOpt = ngoRepository.findById(ngoId);
+        if (ngoOpt.isEmpty()) {
+            throw new RuntimeException("NGO not found");
+        }
+
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("User with this email already exists");
+        }
+
+        User worker = new User();
+        worker.setUsername(email); // Use email as username
+        worker.setEmail(email);
+        worker.setFullName(name);
+        worker.setPhone(phone);
+        worker.setAge(age);
+        worker.setGender(gender);
+        worker.setPassword(passwordEncoder.encode("123123123")); // Default password
+        worker.setRoles(Set.of(UserRole.NGO_WORKER));
+        worker.setNgoId(ngoId);
+        worker.setEnabled(true);
+        worker.setCreatedAt(LocalDateTime.now());
+        worker.setUpdatedAt(LocalDateTime.now());
+
+        User savedWorker = userRepository.save(worker);
+
+        // Send welcome email with credentials
+        emailService.sendWorkerWelcomeEmail(email, name, "123123123", ngoOpt.get().getName());
+
+        emailService.sendWorkerWelcomeEmail(email, name, "123123123", ngoOpt.get().getName());
+
+        return savedWorker;
+    }
+
+    public java.util.List<User> getWorkers(Long ngoId) {
+        return userRepository.findByNgoId(ngoId);
     }
 }

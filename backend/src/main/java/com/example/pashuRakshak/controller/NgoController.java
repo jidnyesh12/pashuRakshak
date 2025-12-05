@@ -72,7 +72,7 @@ public class NgoController {
         return ResponseEntity.ok(stats);
     }
 
-    @PostMapping("/{id}/approve")
+    @PutMapping("/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> approveNgo(@PathVariable Long id, Principal principal) {
         // Get admin user ID from principal
@@ -100,7 +100,7 @@ public class NgoController {
         return ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/{id}/reject")
+    @PutMapping("/{id}/reject")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> rejectNgo(
             @PathVariable Long id,
@@ -181,5 +181,36 @@ public class NgoController {
         boolean deactivated = ngoService.deactivateNgo(id);
         return deactivated ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/{id}/workers")
+    public ResponseEntity<?> addWorker(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> payload) {
+
+        String name = payload.get("name");
+        String email = payload.get("email");
+        String phone = payload.get("phone");
+
+        if (name == null || email == null) {
+            return ResponseEntity.badRequest().body("Name and Email are required");
+        }
+
+        String ageStr = payload.get("age");
+        Integer age = ageStr != null ? Integer.parseInt(ageStr) : null;
+        String gender = payload.get("gender");
+
+        try {
+            com.example.pashuRakshak.entity.User worker = ngoService.addWorker(id, name, email, phone, age, gender);
+            return ResponseEntity.ok(worker);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/workers")
+    public ResponseEntity<List<com.example.pashuRakshak.entity.User>> getWorkers(@PathVariable Long id) {
+        List<com.example.pashuRakshak.entity.User> workers = ngoService.getWorkers(id);
+        return ResponseEntity.ok(workers);
     }
 }

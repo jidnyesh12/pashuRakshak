@@ -1,13 +1,13 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  PlusCircle, 
-  History, 
+import {
+  LayoutDashboard,
+  PlusCircle,
+  History,
   AlertCircle,
   FileText,
   Building2,
-  User, 
+  User,
   LogOut,
   Heart
 } from 'lucide-react';
@@ -31,6 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   // Check if user is NGO
   const isNGO = user?.roles?.includes('NGO');
   const isAdmin = user?.roles?.includes('ADMIN');
+  const isWorker = user?.roles?.includes('NGO_WORKER');
 
   // Define menu items based on user role
   const navItems = isNGO ? [
@@ -40,6 +41,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { icon: User, label: 'Profile', path: '/profile' },
   ] : isAdmin ? [
     { icon: LayoutDashboard, label: 'Overview', path: '/admin' },
+    { icon: User, label: 'Profile', path: '/profile' },
+  ] : isWorker ? [
+    { icon: LayoutDashboard, label: 'Task Dashboard', path: '/worker/dashboard' },
     { icon: User, label: 'Profile', path: '/profile' },
   ] : [
     { icon: LayoutDashboard, label: 'Overview', path: '/user/dashboard' },
@@ -53,7 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     <>
       {/* Mobile Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
           onClick={onClose}
         />
@@ -94,8 +98,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               onClick={() => window.innerWidth < 1024 && onClose()}
               className={({ isActive }) => `
                 flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-colors
-                ${isActive 
-                  ? 'bg-purple-100 text-purple-700' 
+                ${isActive
+                  ? 'bg-purple-100 text-purple-700'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
               `}
             >

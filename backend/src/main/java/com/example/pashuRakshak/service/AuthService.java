@@ -51,7 +51,7 @@ public class AuthService {
         User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
 
         return new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(),
-                userDetails.getEmail(), user.getFullName(), user.getRoles());
+                userDetails.getEmail(), user.getFullName(), user.getNgoId(), user.getRoles());
     }
 
     public String registerUser(SignupRequest signUpRequest) {
@@ -65,7 +65,8 @@ public class AuthService {
             return "Error: Email is already in use!";
         }
 
-        // Handle NGO registration - save to BOTH users table (for auth) and ngos table (for org details)
+        // Handle NGO registration - save to BOTH users table (for auth) and ngos table
+        // (for org details)
         if ("NGO".equalsIgnoreCase(signUpRequest.getUserType())) {
             // Check if email already exists in ngos table
             if (ngoRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
@@ -86,21 +87,7 @@ public class AuthService {
                 return "Error: Phone number is required!";
             }
 
-            // 1. Create User record for authentication (disabled until admin approval)
-            User user = new User(signUpRequest.getUsername(),
-                    signUpRequest.getEmail(),
-                    encoder.encode(signUpRequest.getPassword()),
-                    signUpRequest.getFullName());
-
-            user.setPhone(signUpRequest.getPhone());
-            user.setEnabled(false); // Disabled until admin approves the NGO
-
-            Set<UserRole> roles = new HashSet<>();
-            roles.add(UserRole.NGO);
-            user.setRoles(roles);
-            userRepository.save(user);
-
-            // 2. Create NGO record for organization details
+            // 1. Create NGO record for organization details
             Ngo ngo = new Ngo();
             ngo.setName(signUpRequest.getNgoName());
             ngo.setEmail(signUpRequest.getEmail());
@@ -115,7 +102,22 @@ public class AuthService {
             ngo.setCreatedAt(LocalDateTime.now());
             ngo.setUpdatedAt(LocalDateTime.now());
 
-            ngoRepository.save(ngo);
+            Ngo savedNgo = ngoRepository.save(ngo);
+
+            // 2. Create User record for authentication (disabled until admin approval)
+            User user = new User(signUpRequest.getUsername(),
+                    signUpRequest.getEmail(),
+                    encoder.encode(signUpRequest.getPassword()),
+                    signUpRequest.getFullName());
+
+            user.setPhone(signUpRequest.getPhone());
+            user.setNgoId(savedNgo.getId()); // Link the User to the newly created NGO
+            user.setEnabled(false); // Disabled until admin approves the NGO
+
+            Set<UserRole> roles = new HashSet<>();
+            roles.add(UserRole.NGO);
+            user.setRoles(roles);
+            userRepository.save(user);
 
             return "NGO registration submitted successfully! Your account will be activated after admin verification.";
         }

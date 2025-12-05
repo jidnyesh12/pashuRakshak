@@ -3,14 +3,15 @@ import { User, Mail, Phone, Calendar, Shield, Save, Lock } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
-import { userAPI } from '../utils/api';
+import { userAPI, ngoAPI } from '../utils/api';
 import toast from 'react-hot-toast';
-import type { User as UserType } from '../types';
+import type { User as UserType, NGO } from '../types';
 
 const Profile: React.FC = () => {
   const { updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserType | null>(null);
+  const [ngoDetails, setNgoDetails] = useState<NGO | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
@@ -40,6 +41,22 @@ const Profile: React.FC = () => {
         email: data.email,
         phone: data.phone || ''
       });
+
+      // Fetch NGO details if user is an NGO
+      if (data.roles.includes('NGO') || data.roles.includes('NGO_WORKER')) {
+        try {
+          let ngoData;
+          if (data.ngoId) {
+            ngoData = await ngoAPI.getNgoById(data.ngoId);
+          } else {
+            // Fallback to email if ngoId is missing (legacy support)
+            ngoData = await ngoAPI.getNgoByEmail(data.email);
+          }
+          setNgoDetails(ngoData);
+        } catch (error) {
+          console.error('Failed to fetch NGO details', error);
+        }
+      }
     } catch (error) {
       toast.error('Failed to load profile');
     } finally {
@@ -65,7 +82,7 @@ const Profile: React.FC = () => {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       toast.error('New passwords do not match');
       return;
@@ -100,7 +117,7 @@ const Profile: React.FC = () => {
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-600 to-indigo-600 p-8 mb-10 text-white shadow-xl">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white opacity-10 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-64 w-64 rounded-full bg-purple-400 opacity-10 blur-3xl"></div>
-        
+
         <div className="relative z-10 flex items-center gap-6">
           <div className="h-24 w-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl font-bold border-4 border-white/30 shadow-inner">
             {profileData?.fullName?.charAt(0) || 'U'}
@@ -122,6 +139,42 @@ const Profile: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Profile Summary */}
         <div className="lg:col-span-1 space-y-6">
+
+          {/* NGO Details Card - Only for NGO users */}
+          {ngoDetails && (
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-purple-100 bg-purple-50/30">
+              <h3 className="font-bold text-lg text-purple-900 mb-4 flex items-center gap-2">
+                <Shield className="h-5 w-5 text-purple-600" />
+                NGO Organization
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-purple-100">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Organization Name</p>
+                  <p className="font-bold text-gray-900 text-lg">{ngoDetails.name}</p>
+                </div>
+
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-purple-100">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">NGO ID</p>
+                  <div className="flex items-center gap-2">
+                    <code className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-mono font-bold">
+                      {ngoDetails.uniqueId || 'Generating...'}
+                    </code>
+                    {ngoDetails.verificationStatus === 'APPROVED' && (
+                      <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                        Verified
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-gray-600 px-1">
+                  <span className={`w-2 h-2 rounded-full ${ngoDetails.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                  Status: <span className="font-medium">{ngoDetails.isActive ? 'Active' : 'Inactive'}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="font-bold text-gray-900 mb-4">Contact Details</h3>
             <div className="space-y-4">
@@ -176,7 +229,7 @@ const Profile: React.FC = () => {
                 </button>
               )}
             </div>
-            
+
             <div className="p-6">
               {isEditing ? (
                 <form onSubmit={handleUpdateProfile} className="space-y-4">
@@ -272,7 +325,7 @@ const Profile: React.FC = () => {
                 </button>
               )}
             </div>
-            
+
             <div className="p-6">
               {showPasswordForm ? (
                 <form onSubmit={handleChangePassword} className="space-y-4">

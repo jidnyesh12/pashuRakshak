@@ -61,6 +61,9 @@ public class AnimalReport {
     private Long assignedNgoId;
     private String assignedNgoName;
 
+    private Long assignedWorkerId;
+    private String assignedWorkerName;
+
     // Constructors
     public AnimalReport() {
     }
@@ -209,5 +212,21 @@ public class AnimalReport {
 
     public void setAssignedNgoName(String assignedNgoName) {
         this.assignedNgoName = assignedNgoName;
+    }
+
+    public Long getAssignedWorkerId() {
+        return assignedWorkerId;
+    }
+
+    public void setAssignedWorkerId(Long assignedWorkerId) {
+        this.assignedWorkerId = assignedWorkerId;
+    }
+
+    public String getAssignedWorkerName() {
+        return assignedWorkerName;
+    }
+
+    public void setAssignedWorkerName(String assignedWorkerName) {
+        this.assignedWorkerName = assignedWorkerName;
     }
 }

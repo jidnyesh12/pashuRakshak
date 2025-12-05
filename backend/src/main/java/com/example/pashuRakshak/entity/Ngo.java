@@ -14,6 +14,9 @@ public class Ngo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
+    private String uniqueId;
+
     @NotBlank(message = "NGO name is required")
     private String name;
 
@@ -69,6 +72,14 @@ public class Ngo {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getUniqueId() {
+        return uniqueId;
+    }
+
+    public void setUniqueId(String uniqueId) {
+        this.uniqueId = uniqueId;
     }
 
     public String getName() {

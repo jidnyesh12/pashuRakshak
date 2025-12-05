@@ -58,4 +58,27 @@ public class EmailService {
             e.printStackTrace();
         }
     }
+
+    public void sendWorkerWelcomeEmail(String toEmail, String name, String password, String ngoName) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject("Pashu Rakshak - Welcome to " + ngoName);
+            message.setText("Dear " + name + ",\n\n" +
+                    "You have been added as a worker for " + ngoName + " on Pashu Rakshak.\n\n" +
+                    "Your login credentials are:\n" +
+                    "Email: " + toEmail + "\n" +
+                    "Password: " + password + "\n\n" +
+                    "Please log in and change your password immediately.\n\n" +
+                    "Best regards,\n" +
+                    "The Pashu Rakshak Team");
+
+            mailSender.send(message);
+            System.out.println("Worker welcome email sent to " + toEmail);
+        } catch (Exception e) {
+            System.err.println("Failed to send worker welcome email: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

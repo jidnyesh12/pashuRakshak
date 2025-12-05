@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Boolean existsByEmail(String email);
 
+    java.util.List<User> findByNgoId(Long ngoId);
+
     // Count methods for statistics
     long countByEnabled(Boolean enabled);
 }

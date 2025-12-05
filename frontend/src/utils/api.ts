@@ -172,6 +172,19 @@ export const reportsAPI = {
     return response.data;
   },
 
+  assignReport: async (trackingId: string, workerId: number, workerName: string): Promise<AnimalReport> => {
+    const response = await api.post(`/reports/${trackingId}/assign`, {
+      workerId,
+      workerName,
+    });
+    return response.data;
+  },
+
+  getWorkerTasks: async (workerId: number): Promise<AnimalReport[]> => {
+    const response = await api.get(`/reports/worker/${workerId}/tasks`);
+    return response.data;
+  },
+
   updateReportStatus: async (trackingId: string, status: string): Promise<AnimalReport> => {
     const response = await api.put(`/reports/${trackingId}/status`, {
       status,
@@ -227,13 +240,23 @@ export const ngoAPI = {
     return response.data;
   },
 
-  approveNgo: async (id: number): Promise<any> => {
-    const response = await api.post(`/ngos/${id}/approve`);
+  approveNgo: async (id: number): Promise<NGO> => {
+    const response = await api.put(`/ngos/${id}/approve`);
     return response.data;
   },
 
-  rejectNgo: async (id: number, reason: string): Promise<any> => {
-    const response = await api.post(`/ngos/${id}/reject`, { reason });
+  rejectNgo: async (id: number, reason: string): Promise<NGO> => {
+    const response = await api.put(`/ngos/${id}/reject`, { reason });
+    return response.data;
+  },
+
+  addWorker: async (ngoId: number, data: { name: string; email: string; phone: string; age: number; gender: string }): Promise<any> => {
+    const response = await api.post(`/ngos/${ngoId}/workers`, data);
+    return response.data;
+  },
+
+  getWorkers: async (ngoId: number): Promise<UserResponse[]> => {
+    const response = await api.get(`/ngos/${ngoId}/workers`);
     return response.data;
   },
 };

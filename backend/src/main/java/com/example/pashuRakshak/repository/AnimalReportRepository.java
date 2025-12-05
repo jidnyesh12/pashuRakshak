@@ -21,6 +21,8 @@ public interface AnimalReportRepository extends JpaRepository<AnimalReport, Long
 
        List<AnimalReport> findByReporterEmail(String reporterEmail);
 
+       List<AnimalReport> findByAssignedWorkerId(Long assignedWorkerId);
+
        @Query("SELECT r FROM AnimalReport r WHERE r.status IN :statuses ORDER BY r.createdAt DESC")
        List<AnimalReport> findByStatusIn(@Param("statuses") List<ReportStatus> statuses);
 
