@@ -200,115 +200,6 @@ const Signup: React.FC = () => {
               )}
             </div>
 
-            {/* NGO-specific fields - Only for NGO users */}
-            {userType === 'NGO' && (
-              <div className="bg-green-50 border-2 border-green-200 rounded-xl p-5 space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  🏢 NGO Organization Details
-                </h3>
-                
-                {/* NGO Name */}
-                <div>
-                  <label htmlFor="ngoName" className="block text-sm font-semibold text-gray-700 mb-2">
-                    NGO Organization Name *
-                  </label>
-                  <input
-                    {...register('ngoName', { 
-                      required: userType === 'NGO' ? 'NGO name is required' : false 
-                    })}
-                    type="text"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
-                    placeholder="E.g., Animal Welfare Foundation"
-                  />
-                  {errors.ngoName && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                      <span className="text-lg">•</span> {errors.ngoName.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Address */}
-                <div>
-                  <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">
-                    NGO Address *
-                  </label>
-                  <input
-                    {...register('address', { 
-                      required: userType === 'NGO' ? 'Address is required' : false 
-                    })}
-                    type="text"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
-                    placeholder="E.g., 123 Main Street, City, State - 400001"
-                  />
-                  {errors.address && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                      <span className="text-lg">•</span> {errors.address.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Location Coordinates */}
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="latitude" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Latitude *
-                    </label>
-                    <input
-                      {...register('latitude', { 
-                        required: userType === 'NGO' ? 'Latitude is required' : false,
-                        valueAsNumber: true
-                      })}
-                      type="number"
-                      step="any"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
-                      placeholder="E.g., 19.0760"
-                    />
-                    {errors.latitude && (
-                      <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                        <span className="text-lg">•</span> {errors.latitude.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="longitude" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Longitude *
-                    </label>
-                    <input
-                      {...register('longitude', { 
-                        required: userType === 'NGO' ? 'Longitude is required' : false,
-                        valueAsNumber: true
-                      })}
-                      type="number"
-                      step="any"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
-                      placeholder="E.g., 72.8777"
-                    />
-                    {errors.longitude && (
-                      <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                        <span className="text-lg">•</span> {errors.longitude.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500">
-                  📍 Tip: You can get coordinates from Google Maps by right-clicking on your location
-                </p>
-
-                {/* Description */}
-                <div>
-                  <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
-                    NGO Description <span className="text-gray-400 font-normal">(Optional)</span>
-                  </label>
-                  <textarea
-                    {...register('description')}
-                    rows={3}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none resize-none"
-                    placeholder="Briefly describe your NGO's mission and services..."
-                  />
-                </div>
-              </div>
-            )}
-
             {/* NGO Document Upload - Only for NGO users */}
             {userType === 'NGO' && (
               <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-5">
@@ -322,9 +213,8 @@ const Signup: React.FC = () => {
                   Upload your NGO registration certificate or official document (PDF, JPG, PNG)
                 </p>
                 <ImageUpload
-                  onUpload={(url) => setRegistrationDocumentUrl(url)}
-                  onRemove={() => setRegistrationDocumentUrl('')}
-                  label="Upload Registration Document"
+                  onUploadComplete={(url) => setRegistrationDocumentUrl(url)}
+                  maxImages={1}
                 />
                 {registrationDocumentUrl ? (
                   <p className="mt-2 text-xs text-green-600 flex items-center gap-1">

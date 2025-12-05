@@ -16,29 +16,29 @@ import java.util.Set;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
-    
+
     @Autowired
     private NgoRepository ngoRepository;
-    
+
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
+
     @Override
     public void run(String... args) throws Exception {
         // Initialize with some sample NGOs if database is empty
         if (ngoRepository.count() == 0) {
             createSampleNgos();
         }
-        
+
         // Initialize with some sample users if database is empty
         if (userRepository.count() == 0) {
             createSampleUsers();
         }
     }
-    
+
     private void createSampleNgos() {
         // Sample NGO 1 - Pune
         Ngo ngo1 = new Ngo();
@@ -52,7 +52,7 @@ public class DataInitializer implements CommandLineRunner {
         ngo1.setIsActive(true);
         ngo1.setCreatedAt(LocalDateTime.now());
         ngo1.setUpdatedAt(LocalDateTime.now());
-        
+
         // Sample NGO 2 - Mumbai
         Ngo ngo2 = new Ngo();
         ngo2.setName("Mumbai Animal Care Foundation");
@@ -65,7 +65,7 @@ public class DataInitializer implements CommandLineRunner {
         ngo2.setIsActive(true);
         ngo2.setCreatedAt(LocalDateTime.now());
         ngo2.setUpdatedAt(LocalDateTime.now());
-        
+
         // Sample NGO 3 - Delhi
         Ngo ngo3 = new Ngo();
         ngo3.setName("Delhi Animal Rescue Team");
@@ -78,14 +78,14 @@ public class DataInitializer implements CommandLineRunner {
         ngo3.setIsActive(true);
         ngo3.setCreatedAt(LocalDateTime.now());
         ngo3.setUpdatedAt(LocalDateTime.now());
-        
+
         ngoRepository.save(ngo1);
         ngoRepository.save(ngo2);
         ngoRepository.save(ngo3);
-        
+
         System.out.println("Sample NGOs initialized successfully!");
     }
-    
+
     private void createSampleUsers() {
         // Sample Admin User
         User admin = new User();
@@ -94,21 +94,23 @@ public class DataInitializer implements CommandLineRunner {
         admin.setPassword(passwordEncoder.encode("admin123"));
         admin.setFullName("System Administrator");
         admin.setPhone("+91-9999999999");
+        admin.setEnabled(true); // Explicitly enable
         Set<UserRole> adminRoles = new HashSet<>();
         adminRoles.add(UserRole.ADMIN);
         admin.setRoles(adminRoles);
-        
-        // Sample NGO User
+
+        // Sample NGO User (already approved for testing)
         User ngoUser = new User();
         ngoUser.setUsername("ngouser");
         ngoUser.setEmail("ngo@pawspune.org");
         ngoUser.setPassword(passwordEncoder.encode("ngo123"));
         ngoUser.setFullName("NGO Representative");
         ngoUser.setPhone("+91-9876543210");
+        ngoUser.setEnabled(true); // Explicitly enable for testing
         Set<UserRole> ngoRoles = new HashSet<>();
         ngoRoles.add(UserRole.NGO);
         ngoUser.setRoles(ngoRoles);
-        
+
         // Sample Regular User
         User regularUser = new User();
         regularUser.setUsername("testuser");
@@ -116,14 +118,15 @@ public class DataInitializer implements CommandLineRunner {
         regularUser.setPassword(passwordEncoder.encode("user123"));
         regularUser.setFullName("Test User");
         regularUser.setPhone("+91-9876543213");
+        regularUser.setEnabled(true); // Explicitly enable
         Set<UserRole> userRoles = new HashSet<>();
         userRoles.add(UserRole.USER);
         regularUser.setRoles(userRoles);
-        
+
         userRepository.save(admin);
         userRepository.save(ngoUser);
         userRepository.save(regularUser);
-        
+
         System.out.println("Sample users initialized successfully!");
         System.out.println("Test credentials:");
         System.out.println("Admin: admin/admin123");

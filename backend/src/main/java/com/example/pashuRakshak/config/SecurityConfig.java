@@ -78,7 +78,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/upload/**").permitAll()
                         .requestMatchers("/api/reports/**").permitAll()
-                        .requestMatchers("/api/ngos/**").permitAll()
+                        // Allow public GET for NGO listing and creation POST, but protect admin
+                        // endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/ngos", "/api/ngos/*", "/api/ngos/nearby",
+                                "/api/ngos/email/*")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/ngos").permitAll()
+                        // Admin NGO endpoints require authentication (handled by @PreAuthorize)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/").permitAll()

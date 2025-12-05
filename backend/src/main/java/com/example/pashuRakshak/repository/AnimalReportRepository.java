@@ -24,11 +24,13 @@ public interface AnimalReportRepository extends JpaRepository<AnimalReport, Long
        @Query("SELECT r FROM AnimalReport r WHERE r.status IN :statuses ORDER BY r.createdAt DESC")
        List<AnimalReport> findByStatusIn(@Param("statuses") List<ReportStatus> statuses);
 
-       // Find reports within a certain radius (simplified version using basic math)
        @Query("SELECT r FROM AnimalReport r WHERE " +
                      "r.status IN ('SUBMITTED', 'SEARCHING_FOR_HELP') AND " +
                      "SQRT(POWER(r.latitude - :lat, 2) + POWER(r.longitude - :lng, 2)) <= :radius")
        List<AnimalReport> findNearbyReports(@Param("lat") Double latitude,
                      @Param("lng") Double longitude,
                      @Param("radius") Double radius);
+
+       // Count methods for statistics
+       long countByStatus(ReportStatus status);
 }

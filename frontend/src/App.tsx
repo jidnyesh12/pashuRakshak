@@ -17,6 +17,7 @@ import NgoManagement from './pages/NgoManagement';
 import ReportAnimal from './pages/ReportAnimal';
 import TrackReport from './pages/TrackReport';
 import Emergency from './pages/Emergency';
+import ManageNgo from './pages/ManageNgo';
 import Unauthorized from './pages/Unauthorized';
 
 // Protected Route Component
@@ -121,6 +122,16 @@ function App() {
             <Route path="/report-animal" element={<ReportAnimal />} />
             <Route path="/track-report" element={<TrackReport />} />
             <Route path="/emergency" element={<Emergency />} />
+            
+            {/* NGO Management Route */}
+           <Route 
+              path="/manage-ngo" 
+              element={
+                <ProtectedRoute requiredRole="NGO">
+                  <ManageNgo />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Redirect /dashboard based on user role */}
             <Route 

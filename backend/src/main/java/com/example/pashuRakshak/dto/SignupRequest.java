@@ -25,6 +25,14 @@ public class SignupRequest {
     
     private String userType = "USER"; // USER, NGO
     
+    // NGO-specific fields (required only when userType is NGO)
+    private String ngoName;
+    private String address;
+    private Double latitude;
+    private Double longitude;
+    private String description;
+    private String registrationDocumentUrl;
+    
     // Constructors
     public SignupRequest() {}
     
@@ -46,4 +54,23 @@ public class SignupRequest {
     
     public String getUserType() { return userType; }
     public void setUserType(String userType) { this.userType = userType; }
+    
+    // NGO-specific getters and setters
+    public String getNgoName() { return ngoName; }
+    public void setNgoName(String ngoName) { this.ngoName = ngoName; }
+    
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+    
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
+    
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    
+    public String getRegistrationDocumentUrl() { return registrationDocumentUrl; }
+    public void setRegistrationDocumentUrl(String registrationDocumentUrl) { this.registrationDocumentUrl = registrationDocumentUrl; }
 }

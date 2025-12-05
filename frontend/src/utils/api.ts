@@ -124,6 +124,16 @@ export const userAPI = {
     const response = await api.delete(`/users/${id}/roles/${role}`);
     return response.data;
   },
+
+  getNgoRepresentatives: async (): Promise<UserResponse[]> => {
+    const response = await api.get('/users/ngo-representatives');
+    return response.data;
+  },
+
+  getPendingNgoRepresentatives: async (): Promise<UserResponse[]> => {
+    const response = await api.get('/users/ngo-representatives/pending');
+    return response.data;
+  },
 };
 
 // Reports API
@@ -204,6 +214,27 @@ export const ngoAPI = {
 
   deactivateNgo: async (id: number): Promise<void> => {
     await api.delete(`/ngos/${id}`);
+  },
+
+  // Admin NGO endpoints
+  getAllNgosAdmin: async (): Promise<NGO[]> => {
+    const response = await api.get('/ngos/all');
+    return response.data;
+  },
+
+  getPendingNgos: async (): Promise<NGO[]> => {
+    const response = await api.get('/ngos/pending');
+    return response.data;
+  },
+
+  approveNgo: async (id: number): Promise<any> => {
+    const response = await api.post(`/ngos/${id}/approve`);
+    return response.data;
+  },
+
+  rejectNgo: async (id: number, reason: string): Promise<any> => {
+    const response = await api.post(`/ngos/${id}/reject`, { reason });
+    return response.data;
   },
 };
 

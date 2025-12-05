@@ -4,7 +4,9 @@ import {
   LayoutDashboard, 
   PlusCircle, 
   History, 
-  AlertCircle, 
+  AlertCircle,
+  FileText,
+  Building2,
   User, 
   LogOut,
   Heart
@@ -26,7 +28,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     window.location.href = '/';
   };
 
-  const navItems = [
+  // Check if user is NGO
+  const isNGO = user?.roles?.includes('NGO');
+  const isAdmin = user?.roles?.includes('ADMIN');
+
+  // Define menu items based on user role
+  const navItems = isNGO ? [
+    { icon: LayoutDashboard, label: 'Overview', path: '/ngo/dashboard' },
+    { icon: FileText, label: 'Track My Cases', path: '/track-report' },
+    { icon: Building2, label: 'Manage NGO', path: '/manage-ngo' },
+    { icon: User, label: 'Profile', path: '/profile' },
+  ] : isAdmin ? [
+    { icon: LayoutDashboard, label: 'Overview', path: '/admin' },
+    { icon: User, label: 'Profile', path: '/profile' },
+  ] : [
     { icon: LayoutDashboard, label: 'Overview', path: '/user/dashboard' },
     { icon: PlusCircle, label: 'Report Animal', path: '/report-animal' },
     { icon: History, label: 'Track History', path: '/track-report' },
