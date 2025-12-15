@@ -207,10 +207,15 @@ public class NgoService {
                 total, pending, approved, rejected, active, inactive);
     }
 
-    public User addWorker(Long ngoId, String name, String email, String phone, Integer age, String gender) {
+    public User addWorker(Long ngoId, String username, String name, String email, String phone, Integer age,
+            String gender) {
         Optional<Ngo> ngoOpt = ngoRepository.findById(ngoId);
         if (ngoOpt.isEmpty()) {
             throw new RuntimeException("NGO not found");
+        }
+
+        if (userRepository.existsByUsername(username)) {
+            throw new RuntimeException("User with this username already exists");
         }
 
         if (userRepository.existsByEmail(email)) {
@@ -218,7 +223,7 @@ public class NgoService {
         }
 
         User worker = new User();
-        worker.setUsername(email); // Use email as username
+        worker.setUsername(username);
         worker.setEmail(email);
         worker.setFullName(name);
         worker.setPhone(phone);
@@ -234,8 +239,6 @@ public class NgoService {
         User savedWorker = userRepository.save(worker);
 
         // Send welcome email with credentials
-        emailService.sendWorkerWelcomeEmail(email, name, "123123123", ngoOpt.get().getName());
-
         emailService.sendWorkerWelcomeEmail(email, name, "123123123", ngoOpt.get().getName());
 
         return savedWorker;

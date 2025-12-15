@@ -188,12 +188,13 @@ public class NgoController {
             @PathVariable Long id,
             @RequestBody Map<String, String> payload) {
 
+        String username = payload.get("username");
         String name = payload.get("name");
         String email = payload.get("email");
         String phone = payload.get("phone");
 
-        if (name == null || email == null) {
-            return ResponseEntity.badRequest().body("Name and Email are required");
+        if (username == null || name == null || email == null) {
+            return ResponseEntity.badRequest().body("Username, Name and Email are required");
         }
 
         String ageStr = payload.get("age");
@@ -201,7 +202,8 @@ public class NgoController {
         String gender = payload.get("gender");
 
         try {
-            com.example.pashuRakshak.entity.User worker = ngoService.addWorker(id, name, email, phone, age, gender);
+            com.example.pashuRakshak.entity.User worker = ngoService.addWorker(id, username, name, email, phone, age,
+                    gender);
             return ResponseEntity.ok(worker);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

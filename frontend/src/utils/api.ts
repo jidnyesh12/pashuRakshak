@@ -250,7 +250,7 @@ export const ngoAPI = {
     return response.data;
   },
 
-  addWorker: async (ngoId: number, data: { name: string; email: string; phone: string; age: number; gender: string }): Promise<any> => {
+  addWorker: async (ngoId: number, data: { username: string; name: string; email: string; phone: string; age: number; gender: string }): Promise<any> => {
     const response = await api.post(`/ngos/${ngoId}/workers`, data);
     return response.data;
   },
