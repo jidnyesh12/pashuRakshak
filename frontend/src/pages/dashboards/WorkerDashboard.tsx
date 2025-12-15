@@ -60,7 +60,6 @@ const WorkerDashboard: React.FC = () => {
         };
 
         fetchTasks();
-        fetchTasks();
     }, [user]);
 
     const getWorkerLocation = () => {

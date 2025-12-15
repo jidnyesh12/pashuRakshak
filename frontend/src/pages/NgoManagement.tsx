@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Edit, Trash2, MapPin, Mail, Phone } from 'lucide-react';
-import Layout from '../components/common/Layout';
+import DashboardLayout from '../components/layout/DashboardLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { ngoAPI } from '../utils/api';
 import toast from 'react-hot-toast';
@@ -104,18 +104,17 @@ const NgoManagement: React.FC = () => {
 
   if (loading && ngos.length === 0) {
     return (
-      <Layout>
-        <div className="flex justify-center items-center min-h-screen">
+      <DashboardLayout>
+        <div className="flex justify-center items-center min-h-[60vh]">
           <LoadingSpinner size="lg" />
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <DashboardLayout>
+      <div className="space-y-6">
           {/* Header */}
           <div className="mb-8 flex justify-between items-center">
             <div>
@@ -201,7 +200,6 @@ const NgoManagement: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
 
       {/* Modal */}
       {showModal && (
@@ -314,7 +312,7 @@ const NgoManagement: React.FC = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </DashboardLayout>
   );
 };
 

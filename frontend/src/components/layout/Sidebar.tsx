@@ -40,7 +40,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { icon: Building2, label: 'Manage NGO', path: '/manage-ngo' },
     { icon: User, label: 'Profile', path: '/profile' },
   ] : isAdmin ? [
-    { icon: LayoutDashboard, label: 'Overview', path: '/admin' },
+    { icon: LayoutDashboard, label: 'Overview', path: '/admin/dashboard' },
+    { icon: FileText, label: 'All Reports', path: '/track-report' },
     { icon: User, label: 'Profile', path: '/profile' },
   ] : isWorker ? [
     { icon: LayoutDashboard, label: 'Task Dashboard', path: '/worker/dashboard' },

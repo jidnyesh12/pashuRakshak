@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Search, Filter, MapPin, Calendar, FileText } from 'lucide-react';
+import { Search, Filter, MapPin, Calendar, FileText, Building2 } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { reportsAPI } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import type { AnimalReport } from '../types';
 import { getStatusColor, getStatusText } from '../utils/auth';
 import toast from 'react-hot-toast';
@@ -23,19 +24,37 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const TrackReport: React.FC = () => {
+  const { user } = useAuth();
   const [reports, setReports] = useState<AnimalReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
 
+  // Check user role
+  const isNGO = user?.roles?.includes('NGO');
+  const isAdmin = user?.roles?.includes('ADMIN');
+
   useEffect(() => {
     fetchReports();
-  }, []);
+  }, [user]);
 
   const fetchReports = async () => {
     try {
-      const data = await reportsAPI.getAllReports();
+      setIsLoading(true);
+      let data: AnimalReport[];
+
+      if (isNGO && user?.ngoId) {
+        // For NGO users, fetch reports assigned to their NGO
+        data = await reportsAPI.getReportsByNgo(user.ngoId);
+      } else if (isAdmin) {
+        // For admin, get all reports (this uses a different endpoint that returns all)
+        data = await reportsAPI.getAllReports();
+      } else {
+        // For regular users, get their own reports
+        data = await reportsAPI.getAllReports();
+      }
+
       setReports(data);
     } catch (error) {
       console.error('Failed to fetch reports:', error);
@@ -57,6 +76,19 @@ const TrackReport: React.FC = () => {
     return matchesSearch && matchesFilter;
   });
 
+  // Get page title based on role
+  const getPageTitle = () => {
+    if (isNGO) return 'Track My Cases';
+    if (isAdmin) return 'All Reports';
+    return 'My Reports';
+  };
+
+  const getPageDescription = () => {
+    if (isNGO) return 'Monitor cases assigned to your NGO';
+    if (isAdmin) return 'View all animal rescue reports in the system';
+    return 'Track the status of your submitted rescue requests';
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -71,8 +103,16 @@ const TrackReport: React.FC = () => {
     <DashboardLayout>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Track Reports</h1>
-          <p className="text-gray-600 mt-1">Monitor the status of your rescue requests</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>
+            {isNGO && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                <Building2 className="h-4 w-4" />
+                NGO Cases
+              </span>
+            )}
+          </div>
+          <p className="text-gray-600 mt-1">{getPageDescription()}</p>
         </div>
         
         <div className="flex bg-gray-100 p-1 rounded-lg">
@@ -99,6 +139,34 @@ const TrackReport: React.FC = () => {
         </div>
       </div>
 
+      {/* Stats Summary for NGO */}
+      {isNGO && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+            <p className="text-sm text-gray-500">Total Cases</p>
+            <p className="text-2xl font-bold text-gray-900">{reports.length}</p>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+            <p className="text-sm text-gray-500">In Progress</p>
+            <p className="text-2xl font-bold text-amber-600">
+              {reports.filter(r => !['CASE_RESOLVED', 'SUBMITTED'].includes(r.status)).length}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+            <p className="text-sm text-gray-500">Resolved</p>
+            <p className="text-2xl font-bold text-green-600">
+              {reports.filter(r => r.status === 'CASE_RESOLVED').length}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+            <p className="text-sm text-gray-500">Workers Assigned</p>
+            <p className="text-2xl font-bold text-purple-600">
+              {reports.filter(r => r.assignedWorkerId).length}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -122,6 +190,7 @@ const TrackReport: React.FC = () => {
             <option value="SUBMITTED">Submitted</option>
             <option value="SEARCHING_FOR_HELP">Searching for Help</option>
             <option value="HELP_ON_THE_WAY">Help on the Way</option>
+            <option value="TEAM_DISPATCHED">Team Dispatched</option>
             <option value="ANIMAL_RESCUED">Rescued</option>
             <option value="CASE_RESOLVED">Resolved</option>
           </select>
@@ -135,8 +204,14 @@ const TrackReport: React.FC = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4">
                 <FileText className="h-8 w-8 text-gray-300" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900">No reports found</h3>
-              <p className="text-gray-500 mt-1">Try adjusting your search or filters</p>
+              <h3 className="text-lg font-medium text-gray-900">
+                {isNGO ? 'No cases assigned yet' : 'No reports found'}
+              </h3>
+              <p className="text-gray-500 mt-1">
+                {isNGO 
+                  ? 'Accept cases from the dashboard to see them here'
+                  : 'Try adjusting your search or filters'}
+              </p>
             </div>
           ) : (
             filteredReports.map((report) => (
@@ -194,7 +269,26 @@ const TrackReport: React.FC = () => {
                       </div>
                     </div>
 
-                    {report.assignedNgoName && (
+                    {/* Show worker assignment for NGO */}
+                    {isNGO && (
+                      <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-4 text-sm">
+                        {report.assignedWorkerName ? (
+                          <div className="flex items-center">
+                            <span className="text-gray-500 mr-2">Assigned Worker:</span>
+                            <span className="font-medium text-purple-600">{report.assignedWorkerName}</span>
+                          </div>
+                        ) : (
+                          <span className="text-amber-600 font-medium">⚠️ No worker assigned</span>
+                        )}
+                        <div className="flex items-center">
+                          <span className="text-gray-500 mr-2">Reporter:</span>
+                          <span className="font-medium text-gray-700">{report.reporterName}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Show NGO name for regular users */}
+                    {!isNGO && report.assignedNgoName && (
                       <div className="mt-4 pt-4 border-t border-gray-100 flex items-center text-sm">
                         <span className="text-gray-500 mr-2">Assigned NGO:</span>
                         <span className="font-medium text-purple-600">{report.assignedNgoName}</span>
@@ -230,6 +324,9 @@ const TrackReport: React.FC = () => {
                       <span className={`text-xs px-2 py-1 rounded border ${getStatusColor(report.status)}`}>
                         {getStatusText(report.status)}
                       </span>
+                      {isNGO && report.assignedWorkerName && (
+                        <p className="text-xs text-purple-600 mt-2">Worker: {report.assignedWorkerName}</p>
+                      )}
                     </div>
                   </Popup>
                 </Marker>
