@@ -207,10 +207,15 @@ public class NgoService {
                 total, pending, approved, rejected, active, inactive);
     }
 
-    public User addWorker(Long ngoId, String name, String email, String phone, Integer age, String gender) {
+    public User addWorker(Long ngoId, String username, String name, String email, String phone, Integer age,
+            String gender) {
         Optional<Ngo> ngoOpt = ngoRepository.findById(ngoId);
         if (ngoOpt.isEmpty()) {
             throw new RuntimeException("NGO not found");
+        }
+
+        if (userRepository.existsByUsername(username)) {
+            throw new RuntimeException("User with this username already exists");
         }
 
         if (userRepository.existsByEmail(email)) {
@@ -218,7 +223,7 @@ public class NgoService {
         }
 
         User worker = new User();
-        worker.setUsername(email); // Use email as username
+        worker.setUsername(username);
         worker.setEmail(email);
         worker.setFullName(name);
         worker.setPhone(phone);
@@ -236,12 +241,30 @@ public class NgoService {
         // Send welcome email with credentials
         emailService.sendWorkerWelcomeEmail(email, name, "123123123", ngoOpt.get().getName());
 
-        emailService.sendWorkerWelcomeEmail(email, name, "123123123", ngoOpt.get().getName());
-
         return savedWorker;
     }
 
     public java.util.List<User> getWorkers(Long ngoId) {
         return userRepository.findByNgoId(ngoId);
+    }
+
+    public boolean toggleWorkerStatus(Long ngoId, Long workerId) {
+        Optional<User> workerOpt = userRepository.findById(workerId);
+        if (workerOpt.isEmpty()) {
+            throw new RuntimeException("Worker not found");
+        }
+
+        User worker = workerOpt.get();
+
+        // Verify the worker belongs to this NGO
+        if (!ngoId.equals(worker.getNgoId())) {
+            throw new RuntimeException("Worker does not belong to this NGO");
+        }
+
+        worker.setEnabled(!worker.isEnabled());
+        worker.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(worker);
+
+        return true;
     }
 }

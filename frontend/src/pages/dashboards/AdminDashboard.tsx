@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Building2, FileText, TrendingUp, Trash2, UserPlus, UserMinus, UserCheck } from 'lucide-react';
-import Layout from '../../components/common/Layout';
+import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import NgoManagement from '../../components/admin/NgoManagement';
 // import { useAuth } from '../../context/AuthContext';
@@ -76,17 +76,17 @@ const AdminDashboard: React.FC = () => {
 
     if (loading) {
         return (
-            <Layout>
-                <div className="flex justify-center items-center min-h-screen">
+            <DashboardLayout>
+                <div className="flex justify-center items-center min-h-[60vh]">
                     <LoadingSpinner size="lg" />
                 </div>
-            </Layout>
+            </DashboardLayout>
         );
     }
 
     return (
-        <Layout>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <DashboardLayout>
+            <div className="space-y-6">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
@@ -390,7 +390,7 @@ const AdminDashboard: React.FC = () => {
                     </div>
                 )}
             </div>
-        </Layout>
+        </DashboardLayout>
     );
 };
 

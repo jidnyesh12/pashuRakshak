@@ -86,16 +86,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/ngos").permitAll()
                         // Admin NGO endpoints require authentication (handled by @PreAuthorize)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
-        // For H2 Console
-        http.headers(headers -> headers.frameOptions().sameOrigin());
 
         return http.build();
     }

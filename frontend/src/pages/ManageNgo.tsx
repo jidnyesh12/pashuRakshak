@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, ArrowLeft, Users, Mail, Phone, Calendar, User } from 'lucide-react';
+import { Building2, ArrowLeft, Users, Mail, Phone, Calendar, User, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +13,7 @@ const ManageNgo: React.FC = () => {
   const { user } = useAuth();
 
   const [workerForm, setWorkerForm] = useState({
+    username: '',
     name: '',
     email: '',
     phone: '',
@@ -54,7 +55,7 @@ const ManageNgo: React.FC = () => {
         age: parseInt(workerForm.age) || 0
       });
       toast.success('Worker added successfully! Login details sent to email.');
-      setWorkerForm({ name: '', email: '', phone: '', age: '', gender: '' });
+      setWorkerForm({ username: '', name: '', email: '', phone: '', age: '', gender: '' });
       loadWorkers();
     } catch (error: any) {
       toast.error(error.response?.data || 'Failed to add worker');
@@ -62,6 +63,17 @@ const ManageNgo: React.FC = () => {
       setSubmitting(false);
     }
 
+  };
+
+  const handleToggleWorkerStatus = async (workerId: number) => {
+    if (!user?.ngoId) return;
+    try {
+      await ngoAPI.toggleWorkerStatus(user.ngoId, workerId);
+      toast.success('Worker status updated');
+      loadWorkers();
+    } catch (error: any) {
+      toast.error(error.response?.data || 'Failed to update worker status');
+    }
   };
 
   return (
@@ -104,6 +116,23 @@ const ManageNgo: React.FC = () => {
               <div className="p-6">
                 <form onSubmit={handleAddWorker} className="space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <User className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          value={workerForm.username}
+                          onChange={(e) => setWorkerForm({ ...workerForm, username: e.target.value })}
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+                          placeholder="johndoe"
+                        />
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
                       <div className="relative">
@@ -249,9 +278,25 @@ const ManageNgo: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${worker.enabled
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
+                          <button
+                            onClick={() => handleToggleWorkerStatus(worker.id)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              worker.enabled
+                                ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                            }`}
+                            title={worker.enabled ? 'Deactivate Worker' : 'Activate Worker'}
+                          >
+                            {worker.enabled ? (
+                              <ToggleRight className="w-5 h-5" />
+                            ) : (
+                              <ToggleLeft className="w-5 h-5" />
+                            )}
+                          </button>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              worker.enabled
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
                             }`}>
                             {worker.enabled ? 'Active' : 'Inactive'}
                           </span>

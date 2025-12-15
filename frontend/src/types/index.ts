@@ -136,6 +136,7 @@ export interface UserResponse {
     fullName: string;
     phone?: string;
     roles: UserRole[];
+    ngoId?: number;
     enabled: boolean;
     createdAt: string;
     updatedAt: string;

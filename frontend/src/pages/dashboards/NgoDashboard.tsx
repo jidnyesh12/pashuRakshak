@@ -10,7 +10,9 @@ import {
   FileText,
   TrendingUp,
   Search,
-  Phone
+  Phone,
+  UserCheck,
+  ChevronDown
 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -18,7 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 import { reportsAPI, ngoAPI } from '../../utils/api';
 import { getStatusColor, getStatusText } from '../../utils/auth';
 import toast from 'react-hot-toast';
-import type { AnimalReport, UserResponse } from '../../types';
+import type { AnimalReport, UserResponse, NGO } from '../../types';
 
 const NgoDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -26,6 +28,7 @@ const NgoDashboard: React.FC = () => {
   const [availableReports, setAvailableReports] = useState<AnimalReport[]>([]);
   const [myReports, setMyReports] = useState<AnimalReport[]>([]);
   const [workers, setWorkers] = useState<UserResponse[]>([]);
+  const [ngoDetails, setNgoDetails] = useState<NGO | null>(null);
   const [stats, setStats] = useState({
     totalAssigned: 0,
     completed: 0,
@@ -39,15 +42,17 @@ const NgoDashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [available, assigned, ngoWorkers] = await Promise.all([
+      const [available, assigned, ngoWorkers, ngo] = await Promise.all([
         reportsAPI.getAvailableReports(),
-        user?.id ? reportsAPI.getReportsByNgo(user.id) : Promise.resolve([]),
-        user?.id ? ngoAPI.getWorkers(user.id) : Promise.resolve([])
+        user?.ngoId ? reportsAPI.getReportsByNgo(user.ngoId) : Promise.resolve([]),
+        user?.ngoId ? ngoAPI.getWorkers(user.ngoId) : Promise.resolve([]),
+        user?.ngoId ? ngoAPI.getNgoById(user.ngoId) : Promise.resolve(null)
       ]);
 
       setAvailableReports(available);
       setMyReports(assigned);
       setWorkers(ngoWorkers);
+      setNgoDetails(ngo);
 
       setStats({
         totalAssigned: assigned.length,
@@ -63,13 +68,14 @@ const NgoDashboard: React.FC = () => {
   };
 
   const handleAcceptReport = async (trackingId: string) => {
-    if (!user?.id || !user?.fullName) {
-      toast.error('User information not available');
+    if (!user?.ngoId || !ngoDetails?.name) {
+      toast.error('NGO information not available');
       return;
     }
 
     try {
-      await reportsAPI.acceptReport(trackingId, user.id, user.fullName);
+      // Use the actual NGO organization name, not user's personal name
+      await reportsAPI.acceptReport(trackingId, user.ngoId, ngoDetails.name);
       toast.success('Report accepted successfully');
       loadDashboardData();
     } catch (error) {
@@ -386,35 +392,48 @@ const NgoDashboard: React.FC = () => {
                           {/* Worker Assignment UI */}
                           {report.status !== 'CASE_RESOLVED' && (
                             <div className="mt-4 pt-4 border-t border-gray-100">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                  Assigned To:
-                                </span>
-                                {report.assignedWorkerName ? (
-                                  <span className="text-sm font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded">
-                                    {report.assignedWorkerName}
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <UserCheck className="h-4 w-4 text-purple-500" />
+                                  <span className="text-sm font-semibold text-gray-700">
+                                    Assigned To:
                                   </span>
-                                ) : (
-                                  <span className="text-sm text-gray-400 italic">Unassigned</span>
-                                )}
+                                  {report.assignedWorkerName ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                                      <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                                      {report.assignedWorkerName}
+                                    </span>
+                                  ) : (
+                                    <span className="text-sm text-gray-400 italic">Not assigned yet</span>
+                                  )}
+                                </div>
                               </div>
 
-                              <div className="flex gap-2">
-                                <select
-                                  className="text-sm border-gray-200 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
-                                  onChange={(e) => {
-                                    if (e.target.value) handleAssignWorker(report.trackingId, e.target.value);
-                                  }}
-                                  value=""
-                                >
-                                  <option value="" disabled>Assign to Worker...</option>
-                                  {workers.map(worker => (
-                                    <option key={worker.id} value={worker.id}>
-                                      {worker.fullName}
+                              {workers.length > 0 ? (
+                                <div className="relative">
+                                  <select
+                                    className="w-full appearance-none bg-white border-2 border-gray-200 rounded-xl px-4 py-3 pr-10 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all cursor-pointer hover:border-purple-300"
+                                    onChange={(e) => {
+                                      if (e.target.value) handleAssignWorker(report.trackingId, e.target.value);
+                                    }}
+                                    value=""
+                                  >
+                                    <option value="" disabled>
+                                      {report.assignedWorkerId ? 'Reassign to another worker...' : 'Select a worker to assign...'}
                                     </option>
-                                  ))}
-                                </select>
-                              </div>
+                                    {workers.filter(w => w.enabled).map(worker => (
+                                      <option key={worker.id} value={worker.id}>
+                                        {worker.fullName} {worker.id === report.assignedWorkerId ? '(Current)' : ''}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                                </div>
+                              ) : (
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-700">
+                                  <span className="font-medium">No workers available.</span> Add workers in Manage NGO to assign cases.
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

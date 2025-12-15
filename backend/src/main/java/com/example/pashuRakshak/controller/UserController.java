@@ -27,7 +27,7 @@ public class UserController {
     // ==================== USER PROFILE MANAGEMENT ====================
 
     @GetMapping("/profile")
-    @PreAuthorize("hasRole('USER') or hasRole('NGO') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('NGO') or hasRole('ADMIN') or hasRole('NGO_WORKER')")
     public ResponseEntity<?> getUserProfile(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         Optional<UserResponse> user = userService.getUserByUsername(userPrincipal.getUsername());
@@ -37,7 +37,7 @@ public class UserController {
     }
 
     @PutMapping("/profile")
-    @PreAuthorize("hasRole('USER') or hasRole('NGO') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('NGO') or hasRole('ADMIN') or hasRole('NGO_WORKER')")
     public ResponseEntity<?> updateUserProfile(
             @Valid @RequestBody UpdateUserRequest request,
             Authentication authentication) {
@@ -54,7 +54,7 @@ public class UserController {
     }
 
     @PutMapping("/change-password")
-    @PreAuthorize("hasRole('USER') or hasRole('NGO') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('NGO') or hasRole('ADMIN') or hasRole('NGO_WORKER')")
     public ResponseEntity<?> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,
             Authentication authentication) {

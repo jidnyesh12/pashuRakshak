@@ -49,6 +49,7 @@ public class DataInitializer implements CommandLineRunner {
         ngo1.setLatitude(18.5204);
         ngo1.setLongitude(73.8567);
         ngo1.setDescription("Dedicated to rescuing and caring for injured animals in Pune");
+        ngo1.setVerificationStatus(com.example.pashuRakshak.entity.VerificationStatus.APPROVED);
         ngo1.setIsActive(true);
         ngo1.setCreatedAt(LocalDateTime.now());
         ngo1.setUpdatedAt(LocalDateTime.now());
@@ -62,6 +63,7 @@ public class DataInitializer implements CommandLineRunner {
         ngo2.setLatitude(19.0760);
         ngo2.setLongitude(72.8777);
         ngo2.setDescription("Emergency animal rescue services in Mumbai");
+        ngo2.setVerificationStatus(com.example.pashuRakshak.entity.VerificationStatus.APPROVED);
         ngo2.setIsActive(true);
         ngo2.setCreatedAt(LocalDateTime.now());
         ngo2.setUpdatedAt(LocalDateTime.now());
@@ -75,16 +77,22 @@ public class DataInitializer implements CommandLineRunner {
         ngo3.setLatitude(28.7041);
         ngo3.setLongitude(77.1025);
         ngo3.setDescription("24/7 animal emergency response in Delhi NCR");
+        ngo3.setVerificationStatus(com.example.pashuRakshak.entity.VerificationStatus.APPROVED);
         ngo3.setIsActive(true);
         ngo3.setCreatedAt(LocalDateTime.now());
         ngo3.setUpdatedAt(LocalDateTime.now());
 
-        ngoRepository.save(ngo1);
+        Ngo savedNgo1 = ngoRepository.save(ngo1);
         ngoRepository.save(ngo2);
         ngoRepository.save(ngo3);
 
         System.out.println("Sample NGOs initialized successfully!");
+
+        // Store first NGO ID for linking to sample user
+        this.sampleNgoId = savedNgo1.getId();
     }
+
+    private Long sampleNgoId;
 
     private void createSampleUsers() {
         // Sample Admin User
@@ -94,19 +102,20 @@ public class DataInitializer implements CommandLineRunner {
         admin.setPassword(passwordEncoder.encode("admin123"));
         admin.setFullName("System Administrator");
         admin.setPhone("+91-9999999999");
-        admin.setEnabled(true); // Explicitly enable
+        admin.setEnabled(true);
         Set<UserRole> adminRoles = new HashSet<>();
         adminRoles.add(UserRole.ADMIN);
         admin.setRoles(adminRoles);
 
-        // Sample NGO User (already approved for testing)
+        // Sample NGO User (linked to first NGO - Pune Animal Welfare Society)
         User ngoUser = new User();
         ngoUser.setUsername("ngouser");
         ngoUser.setEmail("ngo@pawspune.org");
         ngoUser.setPassword(passwordEncoder.encode("ngo123"));
         ngoUser.setFullName("NGO Representative");
         ngoUser.setPhone("+91-9876543210");
-        ngoUser.setEnabled(true); // Explicitly enable for testing
+        ngoUser.setEnabled(true);
+        ngoUser.setNgoId(sampleNgoId); // Link to the first NGO
         Set<UserRole> ngoRoles = new HashSet<>();
         ngoRoles.add(UserRole.NGO);
         ngoUser.setRoles(ngoRoles);
@@ -118,7 +127,7 @@ public class DataInitializer implements CommandLineRunner {
         regularUser.setPassword(passwordEncoder.encode("user123"));
         regularUser.setFullName("Test User");
         regularUser.setPhone("+91-9876543213");
-        regularUser.setEnabled(true); // Explicitly enable
+        regularUser.setEnabled(true);
         Set<UserRole> userRoles = new HashSet<>();
         userRoles.add(UserRole.USER);
         regularUser.setRoles(userRoles);
@@ -130,7 +139,7 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("Sample users initialized successfully!");
         System.out.println("Test credentials:");
         System.out.println("Admin: admin/admin123");
-        System.out.println("NGO: ngouser/ngo123");
+        System.out.println("NGO: ngouser/ngo123 (linked to NGO ID: " + sampleNgoId + ")");
         System.out.println("User: testuser/user123");
     }
 }

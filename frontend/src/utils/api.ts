@@ -250,13 +250,18 @@ export const ngoAPI = {
     return response.data;
   },
 
-  addWorker: async (ngoId: number, data: { name: string; email: string; phone: string; age: number; gender: string }): Promise<any> => {
+  addWorker: async (ngoId: number, data: { username: string; name: string; email: string; phone: string; age: number; gender: string }): Promise<any> => {
     const response = await api.post(`/ngos/${ngoId}/workers`, data);
     return response.data;
   },
 
   getWorkers: async (ngoId: number): Promise<UserResponse[]> => {
     const response = await api.get(`/ngos/${ngoId}/workers`);
+    return response.data;
+  },
+
+  toggleWorkerStatus: async (ngoId: number, workerId: number): Promise<{ message: string }> => {
+    const response = await api.put(`/ngos/${ngoId}/workers/${workerId}/toggle-status`);
     return response.data;
   },
 };

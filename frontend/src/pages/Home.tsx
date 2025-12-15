@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
-import Layout from '../components/common/Layout';
 import LandingPage from './LandingPage';
 import { useAuth } from '../context/AuthContext';
 
@@ -17,29 +16,36 @@ const Home: React.FC = () => {
         navigate('/admin/dashboard');
       } else if (user.roles.includes('NGO')) {
         navigate('/ngo/dashboard');
+      } else if (user.roles.includes('NGO_WORKER')) {
+        navigate('/worker/dashboard');
       } else {
         navigate('/user/dashboard');
       }
     }
   }, [isAuthenticated, user, navigate, isLoading]);
 
-  // Show loading while checking authentication
+  // Show a minimal loading state that doesn't include different header/footer
   if (isLoading) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <Heart className="h-12 w-12 text-primary-600 mx-auto mb-4 animate-pulse" />
-            <p className="text-gray-600">Loading...</p>
-          </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="text-center">
+          <Heart className="h-16 w-16 text-primary-600 mx-auto mb-4 animate-pulse" />
+          <p className="text-gray-600 font-medium">Loading PashuRakshak...</p>
         </div>
-      </Layout>
+      </div>
     );
   }
 
-  // Don't render the landing page if user is authenticated
+  // Don't render the landing page if user is authenticated (they'll be redirected)
   if (isAuthenticated) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="text-center">
+          <Heart className="h-16 w-16 text-primary-600 mx-auto mb-4 animate-pulse" />
+          <p className="text-gray-600 font-medium">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   // Render the full landing page for unauthenticated users
