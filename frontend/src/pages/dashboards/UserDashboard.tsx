@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  FileText, 
-  TrendingUp, 
-  CheckCircle, 
-  AlertTriangle, 
-  Plus, 
-  MapPin, 
-  Clock, 
+import {
+  FileText,
+  TrendingUp,
+  CheckCircle,
+  AlertTriangle,
+  Plus,
+  MapPin,
+  Clock,
   ArrowRight,
   Activity,
   Heart
@@ -106,7 +106,7 @@ const UserDashboard: React.FC = () => {
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-600 to-indigo-600 p-8 mb-10 text-white shadow-xl">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white opacity-10 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-64 w-64 rounded-full bg-purple-400 opacity-10 blur-3xl"></div>
-        
+
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-3xl font-bold mb-2">
@@ -131,7 +131,7 @@ const UserDashboard: React.FC = () => {
         {statCards.map((stat, index) => (
           <div key={index} className="relative group bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 overflow-hidden">
             <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.gradient} opacity-10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110`}></div>
-            
+
             <div className="relative z-10">
               <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${stat.gradient} text-white shadow-lg ${stat.shadow} mb-4`}>
                 <stat.icon className="h-6 w-6" />
@@ -145,6 +145,56 @@ const UserDashboard: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {reports.some(r => !['CASE_RESOLVED'].includes(r.status)) && (
+        <div className="mb-10 animate-pulse">
+          <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-xl shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 bg-red-500 rounded-full opacity-10 blur-xl"></div>
+            <div className="flex items-start gap-4 z-10 relative">
+              <div className="p-3 bg-red-100 rounded-full text-red-600 flex-shrink-0">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-red-800 mb-1">Help Needed!</h3>
+                <p className="text-red-700 mb-3">
+                  Review the latest report carefully. Your swift action can save a life!
+                </p>
+
+                {(() => {
+                  const latestReport = reports.filter(r => !['CASE_RESOLVED'].includes(r.status)).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+                  if (!latestReport) return null;
+
+                  return (
+                    <div className="bg-white p-4 rounded-lg border border-red-100 shadow-sm flex flex-col md:flex-row gap-4">
+                      <img
+                        src={latestReport.imageUrls?.[0] || 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?wx=500&q=80'}
+                        alt="Latest Case"
+                        className="w-full md:w-32 h-32 object-cover rounded-md"
+                      />
+                      <div>
+                        <div className='flex items-center gap-2 mb-1'>
+                          <span className="font-bold text-gray-900 uppercase">{latestReport.animalType}</span>
+                          <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">#{latestReport.trackingId}</span>
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2 mb-2">{latestReport.description}</p>
+                        <div className='flex items-center gap-4 text-xs text-gray-500'>
+                          <span className='flex items-center gap-1'><MapPin className="h-3 w-3" /> {latestReport.address}</span>
+                          <span className='flex items-center gap-1'><Clock className="h-3 w-3" /> {new Date(latestReport.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="mt-3">
+                          <Link to="/track-report" className="text-sm font-bold text-red-600 hover:text-red-800 flex items-center gap-1">
+                            View Details <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent Activity Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -185,9 +235,9 @@ const UserDashboard: React.FC = () => {
                       {/* Image Thumbnail */}
                       <div className="relative h-24 w-24 rounded-xl overflow-hidden flex-shrink-0 shadow-sm group-hover:shadow-md transition-all">
                         {report.imageUrls?.[0] ? (
-                          <img 
-                            src={report.imageUrls[0]} 
-                            alt={report.animalType} 
+                          <img
+                            src={report.imageUrls[0]}
+                            alt={report.animalType}
                             className="h-full w-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                           />
                         ) : (
@@ -196,10 +246,9 @@ const UserDashboard: React.FC = () => {
                           </div>
                         )}
                         <div className="absolute top-2 right-2">
-                          <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${
-                            report.status === 'CASE_RESOLVED' ? 'bg-green-500' :
-                            report.status === 'SUBMITTED' ? 'bg-blue-500' : 'bg-orange-500'
-                          }`}>
+                          <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${report.status === 'CASE_RESOLVED' ? 'bg-green-500' :
+                              report.status === 'SUBMITTED' ? 'bg-blue-500' : 'bg-orange-500'
+                            }`}>
                             {getStatusText(report.status)}
                           </span>
                         </div>
@@ -222,7 +271,7 @@ const UserDashboard: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <p className="text-gray-600 text-sm line-clamp-2 mb-3">
                           {report.description || 'No description provided'}
                         </p>

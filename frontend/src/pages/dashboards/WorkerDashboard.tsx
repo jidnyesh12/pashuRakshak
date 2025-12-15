@@ -147,6 +147,59 @@ const WorkerDashboard: React.FC = () => {
                     </div>
                 </div>
 
+                {tasks.some(t => t.status !== 'CASE_RESOLVED') && (
+                    <div className="mt-8 mb-4 animate-pulse">
+                        <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-xl shadow-sm relative overflow-hidden">
+                            <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 bg-red-500 rounded-full opacity-10 blur-xl"></div>
+                            <div className="flex items-start gap-4 z-10 relative">
+                                <div className="p-3 bg-red-100 rounded-full text-red-600 flex-shrink-0">
+                                    <AlertTriangle className="h-6 w-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-bold text-red-800 mb-1">Action Required!</h3>
+                                    <p className="text-red-700 mb-3">
+                                        You have pending assignments. Please attend to the latest case immediately.
+                                    </p>
+
+                                    {(() => {
+                                        const latestTask = tasks.filter(t => t.status !== 'CASE_RESOLVED').sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+                                        if (!latestTask) return null;
+
+                                        return (
+                                            <div className="bg-white p-4 rounded-lg border border-red-100 shadow-sm flex flex-col md:flex-row gap-4">
+                                                <img
+                                                    src={latestTask.imageUrls?.[0] || 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?wx=500&q=80'}
+                                                    alt="Latest Task"
+                                                    className="w-full md:w-32 h-32 object-cover rounded-md"
+                                                />
+                                                <div>
+                                                    <div className='flex items-center gap-2 mb-1'>
+                                                        <span className="font-bold text-gray-900 uppercase">{latestTask.animalType}</span>
+                                                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">#{latestTask.trackingId}</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">{latestTask.condition}</p>
+                                                    <div className='flex items-center gap-4 text-xs text-gray-500'>
+                                                        <span className='flex items-center gap-1'><MapPin className="h-3 w-3" /> {latestTask.address}</span>
+                                                        <span className='flex items-center gap-1'><Calendar className="h-3 w-3" /> {new Date(latestTask.createdAt).toLocaleDateString()}</span>
+                                                    </div>
+                                                    <div className="mt-3">
+                                                        <button onClick={() => {
+                                                            const element = document.getElementById(`task-${latestTask.id}`);
+                                                            if (element) element.scrollIntoView({ behavior: 'smooth' });
+                                                        }} className="text-sm font-bold text-red-600 hover:text-red-800 flex items-center gap-1">
+                                                            Jump to Case <Navigation className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <h2 className="text-xl font-bold text-gray-900 mt-8 mb-4">Current Assignments</h2>
 
                 {tasks.filter(t => t.status !== 'CASE_RESOLVED').length === 0 ? (
@@ -156,7 +209,7 @@ const WorkerDashboard: React.FC = () => {
                 ) : (
                     <div className="grid gap-6">
                         {tasks.filter(t => t.status !== 'CASE_RESOLVED').map((task) => (
-                            <div key={task.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                            <div key={task.id} id={`task-${task.id}`} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                                 <div className="flex flex-col md:flex-row gap-6">
                                     <div className="w-full md:w-1/3">
                                         <img

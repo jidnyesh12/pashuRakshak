@@ -188,6 +188,65 @@ const NgoDashboard: React.FC = () => {
         ))}
       </div>
 
+      {availableReports.length > 0 && (
+        <div className="mb-10 animate-pulse">
+          <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-xl shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 bg-red-500 rounded-full opacity-10 blur-xl"></div>
+            <div className="flex items-start gap-4 z-10 relative">
+              <div className="p-3 bg-red-100 rounded-full text-red-600 flex-shrink-0">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-red-800 mb-1">Help Needed!</h3>
+                <p className="text-red-700 mb-3">
+                  New reports require immediate attention. Please review and accept the latest case.
+                </p>
+
+                {(() => {
+                  const latestAvailable = availableReports.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+                  if (!latestAvailable) return null;
+
+                  return (
+                    <div className="bg-white p-4 rounded-lg border border-red-100 shadow-sm flex flex-col md:flex-row gap-4">
+                      <img
+                        src={latestAvailable.imageUrls?.[0] || 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?wx=500&q=80'}
+                        alt="Latest Available Case"
+                        className="w-full md:w-32 h-32 object-cover rounded-md"
+                      />
+                      <div>
+                        <div className='flex items-center gap-2 mb-1'>
+                          <span className="font-bold text-gray-900 uppercase">{latestAvailable.animalType}</span>
+                          <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">#{latestAvailable.trackingId}</span>
+                          <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md uppercase ${latestAvailable.urgencyLevel === 'HIGH' ? 'bg-red-100 text-red-700' :
+                            latestAvailable.urgencyLevel === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-green-100 text-green-700'
+                            }`}>
+                            {latestAvailable.urgencyLevel}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2 mb-2">{latestAvailable.description}</p>
+                        <div className='flex items-center gap-4 text-xs text-gray-500'>
+                          <span className='flex items-center gap-1'><MapPin className="h-3 w-3" /> {latestAvailable.location}</span>
+                          <span className='flex items-center gap-1'><Clock className="h-3 w-3" /> {new Date(latestAvailable.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="mt-3">
+                          <button
+                            onClick={() => handleAcceptReport(latestAvailable.trackingId)}
+                            className="text-sm font-bold text-red-600 hover:text-red-800 flex items-center gap-1"
+                          >
+                            Accept Now <ArrowRight className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Feed */}
         <div className="lg:col-span-2 space-y-8">
