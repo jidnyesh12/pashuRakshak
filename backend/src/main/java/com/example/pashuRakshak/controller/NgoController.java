@@ -215,4 +215,20 @@ public class NgoController {
         List<com.example.pashuRakshak.entity.User> workers = ngoService.getWorkers(id);
         return ResponseEntity.ok(workers);
     }
+
+    @PutMapping("/{ngoId}/workers/{workerId}/toggle-status")
+    @PreAuthorize("hasRole('NGO') or hasRole('ADMIN')")
+    public ResponseEntity<?> toggleWorkerStatus(
+            @PathVariable Long ngoId,
+            @PathVariable Long workerId) {
+        try {
+            boolean success = ngoService.toggleWorkerStatus(ngoId, workerId);
+            if (success) {
+                return ResponseEntity.ok(Map.of("message", "Worker status updated successfully"));
+            }
+            return ResponseEntity.notFound().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

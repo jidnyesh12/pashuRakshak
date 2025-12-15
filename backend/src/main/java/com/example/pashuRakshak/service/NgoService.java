@@ -247,4 +247,24 @@ public class NgoService {
     public java.util.List<User> getWorkers(Long ngoId) {
         return userRepository.findByNgoId(ngoId);
     }
+
+    public boolean toggleWorkerStatus(Long ngoId, Long workerId) {
+        Optional<User> workerOpt = userRepository.findById(workerId);
+        if (workerOpt.isEmpty()) {
+            throw new RuntimeException("Worker not found");
+        }
+
+        User worker = workerOpt.get();
+
+        // Verify the worker belongs to this NGO
+        if (!ngoId.equals(worker.getNgoId())) {
+            throw new RuntimeException("Worker does not belong to this NGO");
+        }
+
+        worker.setEnabled(!worker.isEnabled());
+        worker.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(worker);
+
+        return true;
+    }
 }

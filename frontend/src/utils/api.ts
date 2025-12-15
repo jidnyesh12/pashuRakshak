@@ -259,6 +259,11 @@ export const ngoAPI = {
     const response = await api.get(`/ngos/${ngoId}/workers`);
     return response.data;
   },
+
+  toggleWorkerStatus: async (ngoId: number, workerId: number): Promise<{ message: string }> => {
+    const response = await api.put(`/ngos/${ngoId}/workers/${workerId}/toggle-status`);
+    return response.data;
+  },
 };
 
 // Upload API

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, ArrowLeft, Users, Mail, Phone, Calendar, User } from 'lucide-react';
+import { Building2, ArrowLeft, Users, Mail, Phone, Calendar, User, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
@@ -63,6 +63,17 @@ const ManageNgo: React.FC = () => {
       setSubmitting(false);
     }
 
+  };
+
+  const handleToggleWorkerStatus = async (workerId: number) => {
+    if (!user?.ngoId) return;
+    try {
+      await ngoAPI.toggleWorkerStatus(user.ngoId, workerId);
+      toast.success('Worker status updated');
+      loadWorkers();
+    } catch (error: any) {
+      toast.error(error.response?.data || 'Failed to update worker status');
+    }
   };
 
   return (
@@ -267,9 +278,25 @@ const ManageNgo: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${worker.enabled
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
+                          <button
+                            onClick={() => handleToggleWorkerStatus(worker.id)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              worker.enabled
+                                ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                            }`}
+                            title={worker.enabled ? 'Deactivate Worker' : 'Activate Worker'}
+                          >
+                            {worker.enabled ? (
+                              <ToggleRight className="w-5 h-5" />
+                            ) : (
+                              <ToggleLeft className="w-5 h-5" />
+                            )}
+                          </button>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              worker.enabled
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
                             }`}>
                             {worker.enabled ? 'Active' : 'Inactive'}
                           </span>
