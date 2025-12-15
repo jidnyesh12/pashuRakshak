@@ -71,16 +71,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       `}>
         {/* Logo */}
         <div className="flex items-center justify-center h-16 border-b border-gray-100">
-          <Heart className="h-8 w-8 text-purple-600 mr-2" />
-          <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <Heart className="h-8 w-8 text-[#e6ce00] mr-2" />
+          <span className="text-xl font-bold text-[#004432]">
             PashuRakshak
           </span>
         </div>
 
         {/* User Info */}
-        <div className="p-6 border-b border-gray-100 bg-purple-50">
+        <div className="p-6 border-b border-gray-100 bg-[#004432]/5">
           <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-full bg-purple-200 flex items-center justify-center text-purple-700 font-bold">
+            <div className="h-10 w-10 rounded-full bg-[#004432] flex items-center justify-center text-white font-bold">
               {user?.fullName?.charAt(0) || 'U'}
             </div>
             <div>
@@ -100,8 +100,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               className={({ isActive }) => `
                 flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-colors
                 ${isActive
-                  ? 'bg-purple-100 text-purple-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+                  ? 'bg-[#004432] text-white shadow-md'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-[#004432]'}
               `}
             >
               <item.icon className="h-5 w-5 mr-3" />

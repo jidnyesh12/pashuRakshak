@@ -43,7 +43,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuClick }) => {
           </button>
 
           {/* Role Badge */}
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 capitalize">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#e6ce00]/20 text-[#004432] border border-[#e6ce00]/30 capitalize">
             {user?.roles?.[0]?.toLowerCase() || 'User'}
           </span>
         </div>

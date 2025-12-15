@@ -128,19 +128,19 @@ const WorkerDashboard: React.FC = () => {
         <DashboardLayout title="My Assigned Tasks" role="NGO_WORKER">
             <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100">
-                        <h3 className="text-blue-800 font-bold text-lg mb-1">Total Assigned</h3>
-                        <p className="text-3xl font-extrabold text-blue-900">{tasks.length}</p>
+                    <div className="bg-[#004432]/5 p-6 rounded-2xl border border-[#004432]/10">
+                        <h3 className="text-[#004432] font-bold text-lg mb-1">Total Assigned</h3>
+                        <p className="text-3xl font-extrabold text-[#004432]">{tasks.length}</p>
                     </div>
-                    <div className="bg-yellow-50 p-6 rounded-2xl border border-yellow-100">
+                    <div className="bg-[#e6ce00]/10 p-6 rounded-2xl border border-[#e6ce00]/20">
                         <h3 className="text-yellow-800 font-bold text-lg mb-1">Pending</h3>
                         <p className="text-3xl font-extrabold text-yellow-900">
                             {tasks.filter(t => t.status !== 'CASE_RESOLVED').length}
                         </p>
                     </div>
-                    <div className="bg-green-50 p-6 rounded-2xl border border-green-100">
-                        <h3 className="text-green-800 font-bold text-lg mb-1">Completed</h3>
-                        <p className="text-3xl font-extrabold text-green-900">
+                    <div className="bg-[#13735f]/5 p-6 rounded-2xl border border-[#13735f]/10">
+                        <h3 className="text-[#13735f] font-bold text-lg mb-1">Completed</h3>
+                        <p className="text-3xl font-extrabold text-[#13735f]">
                             {tasks.filter(t => t.status === 'CASE_RESOLVED').length}
                         </p>
                     </div>
@@ -221,7 +221,7 @@ const WorkerDashboard: React.FC = () => {
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
+                                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#004432]/10 text-[#004432]">
                                                         {task.animalType}
                                                     </span>
                                                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${task.status === 'CASE_RESOLVED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
@@ -369,7 +369,7 @@ const WorkerDashboard: React.FC = () => {
                                             <div className="flex justify-between items-start">
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                                                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#004432]/10 text-[#004432]">
                                                             RESOLVED
                                                         </span>
                                                     </div>

@@ -6,9 +6,10 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
   title?: string;
   role?: string;
+  fullScreen?: boolean;
 }
 
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, fullScreen = false }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -22,13 +23,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         onMenuClick={() => setIsSidebarOpen(true)}
       />
 
-      <main className="lg:pl-64 pt-16 min-h-screen transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className={`lg:pl-64 pt-16 min-h-screen transition-all duration-300 ${fullScreen ? '' : ''}`}>
+        <div className={fullScreen ? "h-[calc(100vh-64px)] overflow-hidden" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"}>
           {children}
         </div>
       </main>
     </div>
   );
 };
+
 
 export default DashboardLayout;

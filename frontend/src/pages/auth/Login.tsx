@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Eye, EyeOff, Heart, ArrowRight, Shield } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authAPI } from '../../utils/api';
 import { setAuthData } from '../../utils/auth';
@@ -74,91 +74,108 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        {/* Card */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100">
-          {/* Logo & Title */}
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <Heart className="h-8 w-8 text-white" />
-              </div>
+    <div className="min-h-screen flex bg-white">
+      {/* Left Panel - Image Section */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-[#004432]">
+        <img
+          src="/auth-bg.png"
+          alt="Wilderness"
+          className="absolute inset-0 w-full h-full object-cover opacity-90"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#004432] via-[#004432]/40 to-transparent"></div>
+        <div className="relative z-10 p-16 flex flex-col items-start justify-end h-full text-white">
+          {/* <img src="/logo.png" alt="PashuRakshak" className="h-20 w-auto mb-8 drop-shadow-lg" /> */}
+          <img src="/sticker1.jpg" alt="PashuRakshak" className="h-20 w-auto mb-8 drop-shadow-lg" />
+          <h1 className="text-5xl font-bold mb-6 leading-tight">
+            Protecting <span className="text-[#e6ce00]">Nature</span>,<br />
+            Preserving <span className="text-[#e6ce00]">Life</span>.
+          </h1>
+          <p className="text-xl text-emerald-100 max-w-lg mb-8">
+            Join our community of guardians dedicated to rescuing and rehabilitating wildlife. Every action counts.
+          </p>
+          <div className="flex items-center gap-4">
+            <div className="flex -space-x-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="w-10 h-10 rounded-full border-2 border-[#004432] bg-white flex items-center justify-center overflow-hidden">
+                  {/* Placeholder avatars until we have real ones, or just generic user icons */}
+                  <div className="w-full h-full bg-gray-200" />
+                </div>
+              ))}
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-              Welcome Back
-            </h2>
-            <p className="text-gray-600">
-              Sign in to continue helping animals
-            </p>
+            <span className="text-sm font-medium text-emerald-100">1000+ Guardians joined</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Form Section */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 relative">
+        {/* Decorative stickers */}
+        <img src="/animal-stickers.png" alt="" className="absolute top-10 right-10 w-24 opacity-20 rotate-12 pointer-events-none" />
+
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center lg:text-left">
+            <h2 className="text-3xl font-bold text-[#004432]">Welcome Back</h2>
+            <p className="mt-2 text-gray-600">Please enter your details to sign in</p>
           </div>
 
-          {/* Form */}
-          <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             {/* Username Field */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label htmlFor="username" className="text-sm font-medium text-gray-700">
                 Username or Email
               </label>
               <input
                 {...register('username', { required: 'Username is required' })}
                 type="text"
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 outline-none"
-                placeholder="Enter your username or email"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-gray-50 focus:bg-white"
+                placeholder="Enter your username"
               />
               {errors.username && (
-                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                <p className="text-sm text-red-500 flex items-center gap-1">
                   <span className="text-lg">•</span> {errors.username.message}
                 </p>
               )}
             </div>
 
             {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                Password
-              </label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-medium text-[#004432] hover:text-[#13735f]"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <input
                   {...register('password', { required: 'Password is required' })}
                   type={showPassword ? 'text' : 'password'}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 outline-none pr-12"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-gray-50 focus:bg-white pr-12"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                <p className="text-sm text-red-500 flex items-center gap-1">
                   <span className="text-lg">•</span> {errors.password.message}
                 </p>
               )}
             </div>
 
-            {/* Forgot Password Link */}
-            <div className="flex items-center justify-end">
-              <Link
-                to="/forgot-password"
-                className="text-sm font-medium text-purple-600 hover:text-purple-700 transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3.5 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              className="w-full bg-[#004432] text-white py-3.5 px-6 rounded-xl font-bold text-lg hover:bg-[#13735f] shadow-lg shadow-[#004432]/20 hover:shadow-xl hover:shadow-[#004432]/30 transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <LoadingSpinner size="sm" />
@@ -171,52 +188,40 @@ const Login: React.FC = () => {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-center text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link
-                to="/signup"
-                className="font-semibold text-purple-600 hover:text-purple-700 transition-colors"
-              >
-                Create one now
-              </Link>
-            </p>
-          </div>
+          <p className="text-center text-gray-600">
+            Don't have an account?{' '}
+            <Link to="/signup" className="font-bold text-[#004432] hover:text-[#13735f]">
+              Create account
+            </Link>
+          </p>
 
-          {/* Test Credentials */}
-          <div className="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
-            <div className="flex items-start gap-2 mb-3">
-              <Shield className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-gray-900 mb-2">Test Credentials</p>
-                <div className="text-xs text-gray-600 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium min-w-[60px]">Admin:</span>
-                    <code className="bg-white px-2 py-0.5 rounded">admin / admin123</code>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium min-w-[60px]">NGO:</span>
-                    <code className="bg-white px-2 py-0.5 rounded">ngouser / ngo123</code>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium min-w-[60px]">User:</span>
-                    <code className="bg-white px-2 py-0.5 rounded">testuser / user123</code>
-                  </div>
-                </div>
+          {/* Test Credentials Box - Styled for new theme */}
+          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+            <div className="flex items-center gap-2 mb-4">
+              <Shield className="w-5 h-5 text-[#004432]" />
+              <span className="font-bold text-gray-900">Quick Access</span>
+            </div>
+            <div className="grid grid-cols-1 gap-2 text-sm">
+              <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100">
+                <span className="text-gray-500">Admin</span>
+                <code className="text-[#004432] font-mono font-medium">admin / admin123</code>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100">
+                <span className="text-gray-500">NGO</span>
+                <code className="text-[#004432] font-mono font-medium">ngouser / ngo123</code>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100">
+                <span className="text-gray-500">User</span>
+                <code className="text-[#004432] font-mono font-medium">testuser / user123</code>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Back to Home */}
-        <div className="mt-6 text-center">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            ← Back to Home
-          </Link>
+          <div className="text-center pt-4">
+            <Link to="/" className="text-sm text-gray-500 hover:text-[#004432] transition-colors">
+              ← Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     </div>

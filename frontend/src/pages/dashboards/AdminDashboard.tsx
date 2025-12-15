@@ -99,7 +99,7 @@ const AdminDashboard: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('overview')}
                             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === 'overview'
-                                ? 'bg-teal-500 text-white shadow-md'
+                                ? 'bg-[#004432] text-white shadow-md'
                                 : 'hover:bg-gray-100 text-gray-600'
                                 }`}
                         >
@@ -109,7 +109,7 @@ const AdminDashboard: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('ngos')}
                             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === 'ngos'
-                                ? 'bg-teal-500 text-white shadow-md'
+                                ? 'bg-[#004432] text-white shadow-md'
                                 : 'hover:bg-gray-100 text-gray-600'
                                 }`}
                         >
@@ -119,7 +119,7 @@ const AdminDashboard: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('users')}
                             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === 'users'
-                                ? 'bg-teal-500 text-white shadow-md'
+                                ? 'bg-[#004432] text-white shadow-md'
                                 : 'hover:bg-gray-100 text-gray-600'
                                 }`}
                         >
@@ -129,7 +129,7 @@ const AdminDashboard: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('reports')}
                             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === 'reports'
-                                ? 'bg-teal-500 text-white shadow-md'
+                                ? 'bg-[#004432] text-white shadow-md'
                                 : 'hover:bg-gray-100 text-gray-600'
                                 }`}
                         >
@@ -139,7 +139,7 @@ const AdminDashboard: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('ngo-reps')}
                             className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === 'ngo-reps'
-                                ? 'bg-teal-500 text-white shadow-md'
+                                ? 'bg-[#004432] text-white shadow-md'
                                 : 'hover:bg-gray-100 text-gray-600'
                                 }`}
                         >
@@ -161,10 +161,10 @@ const AdminDashboard: React.FC = () => {
                                 bgColor="bg-blue-100"
                             />
                             <StatCard
-                                icon={<Building2 className="w-8 h-8 text-green-600" />}
+                                icon={<Building2 className="w-8 h-8 text-[#004432]" />}
                                 title="Total NGOs"
                                 value={stats.totalNgos}
-                                bgColor="bg-green-100"
+                                bgColor="bg-[#004432]/10"
                             />
                             <StatCard
                                 icon={<FileText className="w-8 h-8 text-purple-600" />}
@@ -173,10 +173,10 @@ const AdminDashboard: React.FC = () => {
                                 bgColor="bg-purple-100"
                             />
                             <StatCard
-                                icon={<TrendingUp className="w-8 h-8 text-orange-600" />}
+                                icon={<TrendingUp className="w-8 h-8 text-[#e6ce00]" />}
                                 title="Active Cases"
                                 value={stats.activeReports}
-                                bgColor="bg-orange-100"
+                                bgColor="bg-[#e6ce00]/10"
                             />
                         </div>
 
@@ -186,25 +186,25 @@ const AdminDashboard: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <button
                                     onClick={() => setActiveTab('ngos')}
-                                    className="p-4 rounded-lg border-2 border-gray-200 hover:border-teal-500 transition-all text-left"
+                                    className="p-4 rounded-lg border-2 border-gray-200 hover:border-[#004432] transition-all text-left"
                                 >
-                                    <Building2 className="w-6 h-6 text-teal-600 mb-2" />
+                                    <Building2 className="w-6 h-6 text-[#004432] mb-2" />
                                     <h4 className="font-semibold text-gray-900">Manage NGOs</h4>
                                     <p className="text-sm text-gray-600">Review pending NGO registrations</p>
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('users')}
-                                    className="p-4 rounded-lg border-2 border-gray-200 hover:border-teal-500 transition-all text-left"
+                                    className="p-4 rounded-lg border-2 border-gray-200 hover:border-[#004432] transition-all text-left"
                                 >
-                                    <Users className="w-6 h-6 text-teal-600 mb-2" />
+                                    <Users className="w-6 h-6 text-[#004432] mb-2" />
                                     <h4 className="font-semibold text-gray-900">Manage Users</h4>
                                     <p className="text-sm text-gray-600">View and manage user accounts</p>
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('reports')}
-                                    className="p-4 rounded-lg border-2 border-gray-200 hover:border-teal-500 transition-all text-left"
+                                    className="p-4 rounded-lg border-2 border-gray-200 hover:border-[#004432] transition-all text-left"
                                 >
-                                    <FileText className="w-6 h-6 text-teal-600 mb-2" />
+                                    <FileText className="w-6 h-6 text-[#004432] mb-2" />
                                     <h4 className="font-semibold text-gray-900">View Reports</h4>
                                     <p className="text-sm text-gray-600">Monitor all animal rescue reports</p>
                                 </button>

@@ -71,23 +71,23 @@ const UserDashboard: React.FC = () => {
       value: stats.totalReports,
       subtext: 'Animals Reported',
       icon: Activity,
-      gradient: 'from-blue-500 to-blue-600',
-      shadow: 'shadow-blue-200',
+      gradient: 'from-[#13735f] to-[#004432]',
+      shadow: 'shadow-emerald-200',
     },
     {
       label: 'Active Cases',
       value: stats.activeReports,
       subtext: 'Currently Tracking',
       icon: TrendingUp,
-      gradient: 'from-orange-500 to-orange-600',
-      shadow: 'shadow-orange-200',
+      gradient: 'from-[#e6ce00] to-yellow-600',
+      shadow: 'shadow-yellow-200',
     },
     {
       label: 'Lives Saved',
       value: stats.resolvedReports,
       subtext: 'Successful Rescues',
       icon: Heart,
-      gradient: 'from-green-500 to-green-600',
+      gradient: 'from-[#004432] to-[#13735f]',
       shadow: 'shadow-green-200',
     },
     {
@@ -103,22 +103,22 @@ const UserDashboard: React.FC = () => {
   return (
     <DashboardLayout>
       {/* Hero Section with Glassmorphism */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-600 to-indigo-600 p-8 mb-10 text-white shadow-xl">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white opacity-10 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-64 w-64 rounded-full bg-purple-400 opacity-10 blur-3xl"></div>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#004432] to-[#13735f] p-8 mb-10 text-white shadow-xl">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white opacity-5 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-64 w-64 rounded-full bg-[#e6ce00] opacity-10 blur-3xl"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h1 className="text-3xl font-bold mb-2">
               Hello, {user?.fullName?.split(' ')[0]}! 👋
             </h1>
-            <p className="text-purple-100 max-w-lg text-lg">
+            <p className="text-emerald-100 max-w-lg text-lg">
               Thank you for being a guardian for the voiceless. Your reports make a real difference in saving lives.
             </p>
           </div>
           <Link
             to="/report-animal"
-            className="group flex items-center gap-2 px-6 py-3 bg-white text-purple-600 rounded-xl font-bold hover:bg-purple-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="group flex items-center gap-2 px-6 py-3 bg-white text-[#004432] rounded-xl font-bold hover:bg-emerald-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             <Plus className="h-5 w-5 transition-transform group-hover:rotate-90" />
             Report New Case
@@ -202,10 +202,10 @@ const UserDashboard: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Activity className="h-5 w-5 text-purple-600" />
+              <Activity className="h-5 w-5 text-[#004432]" />
               Recent Reports
             </h2>
-            <Link to="/track-report" className="text-sm font-medium text-purple-600 hover:text-purple-700 flex items-center gap-1 hover:gap-2 transition-all">
+            <Link to="/track-report" className="text-sm font-medium text-[#004432] hover:text-[#13735f] flex items-center gap-1 hover:gap-2 transition-all">
               View All History <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -214,7 +214,7 @@ const UserDashboard: React.FC = () => {
             {reports.length === 0 ? (
               <div className="p-12 text-center">
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-purple-50 mb-6">
-                  <FileText className="h-10 w-10 text-purple-200" />
+                  <FileText className="h-10 w-10 text-[#004432]/30" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">No reports yet</h3>
                 <p className="text-gray-500 mb-6 max-w-sm mx-auto">
@@ -222,7 +222,7 @@ const UserDashboard: React.FC = () => {
                 </p>
                 <Link
                   to="/report-animal"
-                  className="inline-flex items-center px-6 py-2.5 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                  className="inline-flex items-center px-6 py-2.5 bg-[#004432] text-white rounded-lg font-medium hover:bg-[#13735f] transition-colors"
                 >
                   Make a Report
                 </Link>
@@ -247,7 +247,7 @@ const UserDashboard: React.FC = () => {
                         )}
                         <div className="absolute top-2 right-2">
                           <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${report.status === 'CASE_RESOLVED' ? 'bg-green-500' :
-                              report.status === 'SUBMITTED' ? 'bg-blue-500' : 'bg-orange-500'
+                            report.status === 'SUBMITTED' ? 'bg-blue-500' : 'bg-orange-500'
                             }`}>
                             {getStatusText(report.status)}
                           </span>
@@ -277,7 +277,7 @@ const UserDashboard: React.FC = () => {
                         </p>
 
                         <div className="flex items-center text-xs text-gray-500 font-medium">
-                          <MapPin className="h-3.5 w-3.5 mr-1.5 text-purple-500" />
+                          <MapPin className="h-3.5 w-3.5 mr-1.5 text-[#e6ce00]" />
                           <span className="truncate max-w-[200px] sm:max-w-xs">
                             {report.address || 'Location not specified'}
                           </span>
@@ -297,7 +297,7 @@ const UserDashboard: React.FC = () => {
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="font-bold text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-3">
-              <Link to="/report-animal" className="flex items-center p-3 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors group">
+              <Link to="/report-animal" className="flex items-center p-3 rounded-xl bg-emerald-50 text-[#004432] hover:bg-emerald-100 transition-colors group">
                 <div className="p-2 bg-white rounded-lg mr-3 shadow-sm group-hover:scale-110 transition-transform">
                   <Plus className="h-5 w-5" />
                 </div>

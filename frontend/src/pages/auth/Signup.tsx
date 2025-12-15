@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Eye, EyeOff, Heart, ArrowRight, User, Mail, Phone, Lock, UserCircle, FileText } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, User, Mail, Phone, Lock, UserCircle, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authAPI } from '../../utils/api';
 import type { SignupRequest } from '../../types';
@@ -45,7 +45,7 @@ const Signup: React.FC = () => {
         signupData.registrationDocumentUrl = registrationDocumentUrl;
       }
       await authAPI.signup(signupData);
-      
+
       if (data.userType === 'NGO') {
         toast.success('NGO registration submitted! Your account will be activated after admin verification.');
       } else {
@@ -60,411 +60,283 @@ const Signup: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full">
-        {/* Card */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100">
-          {/* Logo & Title */}
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <Heart className="h-8 w-8 text-white" />
-              </div>
+    <div className="min-h-screen flex bg-white">
+      {/* Left Panel - Image Section */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-[#004432]">
+        <img
+          src="/auth-bg.png"
+          alt="Wilderness"
+          className="absolute inset-0 w-full h-full object-cover opacity-90"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#004432] via-[#004432]/40 to-transparent"></div>
+        <div className="relative z-10 p-16 flex flex-col items-start justify-end h-full text-white">
+          <img src="/logo.png" alt="PashuRakshak" className="h-20 w-auto mb-8 drop-shadow-lg" />
+          <h1 className="text-5xl font-bold mb-6 leading-tight">
+            Join the <span className="text-[#e6ce00]">Movement</span>,<br />
+            Be the <span className="text-[#e6ce00]">Voice</span>.
+          </h1>
+          <p className="text-xl text-emerald-100 max-w-lg mb-8">
+            Whether you're reporting a rescue or saving lives directly, your contribution matters.
+          </p>
+
+          <div className="grid grid-cols-2 gap-6 w-full max-w-lg">
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
+              <h3 className="font-bold text-[#e6ce00] text-lg mb-1">For Users</h3>
+              <p className="text-sm text-emerald-100">Report stray animals in distress and track their rescue journey.</p>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-              Join PashuRakshak
-            </h2>
-            <p className="text-gray-600">
-              Start making a difference for animals today
-            </p>
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
+              <h3 className="font-bold text-[#e6ce00] text-lg mb-1">For NGOs</h3>
+              <p className="text-sm text-emerald-100">Manage rescue operations and coordinate with your team efficiently.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Form Section */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 relative overflow-y-auto">
+        {/* Decorative stickers */}
+        <img src="/animal-stickers.png" alt="" className="absolute top-10 right-10 w-24 opacity-20 rotate-12 pointer-events-none" />
+
+        <div className="max-w-2xl w-full space-y-8 my-auto">
+          <div className="text-center lg:text-left">
+            <h2 className="text-3xl font-bold text-[#004432]">Create Account</h2>
+            <p className="mt-2 text-gray-600">Start making a difference today</p>
           </div>
 
-          {/* Form */}
-          <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid md:grid-cols-2 gap-5">
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <div className="grid md:grid-cols-2 gap-6">
               {/* Full Name */}
-              <div>
-                <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Full Name
-                </label>
+              <div className="space-y-2">
+                <label htmlFor="fullName" className="text-sm font-medium text-gray-700">Full Name</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <User className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
                   <input
                     {...register('fullName', { required: 'Full name is required' })}
                     type="text"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-gray-50 focus:bg-white"
                     placeholder="John Doe"
                   />
                 </div>
-                {errors.fullName && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                    <span className="text-lg">•</span> {errors.fullName.message}
-                  </p>
-                )}
+                {errors.fullName && <p className="text-sm text-red-500">{errors.fullName.message}</p>}
               </div>
 
               {/* Username */}
-              <div>
-                <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Username
-                </label>
+              <div className="space-y-2">
+                <label htmlFor="username" className="text-sm font-medium text-gray-700">Username</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserCircle className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <UserCircle className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
                   <input
                     {...register('username', {
                       required: 'Username is required',
-                      minLength: { value: 3, message: 'Username must be at least 3 characters' },
-                      maxLength: { value: 20, message: 'Username must be less than 20 characters' },
+                      minLength: { value: 3, message: 'Min 3 chars' },
+                      maxLength: { value: 20, message: 'Max 20 chars' },
                     })}
                     type="text"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-gray-50 focus:bg-white"
                     placeholder="johndoe"
                   />
                 </div>
-                {errors.username && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                    <span className="text-lg">•</span> {errors.username.message}
-                  </p>
-                )}
+                {errors.username && <p className="text-sm text-red-500">{errors.username.message}</p>}
               </div>
 
               {/* Email */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Address
-                </label>
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
                   <input
                     {...register('email', {
                       required: 'Email is required',
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: 'Invalid email address',
+                        message: 'Invalid email',
                       },
                     })}
                     type="email"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-gray-50 focus:bg-white"
                     placeholder="john@example.com"
                   />
                 </div>
-                {errors.email && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                    <span className="text-lg">•</span> {errors.email.message}
-                  </p>
-                )}
+                {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
               </div>
 
               {/* Phone */}
-              <div>
-                <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Phone Number <span className="text-gray-400 font-normal">(Optional)</span>
-                </label>
+              <div className="space-y-2">
+                <label htmlFor="phone" className="text-sm font-medium text-gray-700">Phone (Optional)</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <Phone className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
                   <input
                     {...register('phone')}
                     type="tel"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
-                    placeholder="+91-9876543210"
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-gray-50 focus:bg-white"
+                    placeholder="+91 98765 43210"
                   />
                 </div>
               </div>
             </div>
 
             {/* Account Type */}
-            <div>
-              <label htmlFor="userType" className="block text-sm font-semibold text-gray-700 mb-2">
-                I want to join as
-              </label>
-              <select
-                {...register('userType', { required: 'Please select account type' })}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
-              >
-                <option value="">Select account type</option>
-                <option value="USER">Regular User (Report & Track Cases)</option>
-                <option value="NGO">NGO Representative (Rescue Animals)</option>
-              </select>
-              {errors.userType && (
-                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                  <span className="text-lg">•</span> {errors.userType.message}
-                </p>
-              )}
+            <div className="space-y-2">
+              <label htmlFor="userType" className="text-sm font-medium text-gray-700">I want to join as</label>
+              <div className="relative">
+                <select
+                  {...register('userType', { required: 'Please select account type' })}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-gray-50 focus:bg-white appearance-none cursor-pointer"
+                >
+                  <option value="">Select account type</option>
+                  <option value="USER">Regular User (Report & Track Cases)</option>
+                  <option value="NGO">NGO Representative (Rescue Animals)</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">
+                  <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                </div>
+              </div>
+              {errors.userType && <p className="text-sm text-red-500">{errors.userType.message}</p>}
             </div>
 
-            {/* NGO-specific fields - Only for NGO users */}
+            {/* NGO Specific Fields */}
             {userType === 'NGO' && (
-              <div className="bg-green-50 border-2 border-green-200 rounded-xl p-5 space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  🏢 NGO Organization Details
-                </h3>
-                
-                {/* NGO Name */}
-                <div>
-                  <label htmlFor="ngoName" className="block text-sm font-semibold text-gray-700 mb-2">
-                    NGO Organization Name *
-                  </label>
+              <div className="bg-[#004432]/5 border border-[#004432]/10 rounded-2xl p-6 space-y-6 animate-fadeIn">
+                <div className="flex items-center gap-2 pb-2 border-b border-[#004432]/10">
+                  <span className="text-xl">🏢</span>
+                  <h3 className="font-bold text-[#004432]">Organization Details</h3>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">NGO Name *</label>
                   <input
-                    {...register('ngoName', { 
-                      required: userType === 'NGO' ? 'NGO name is required' : false 
-                    })}
-                    type="text"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
+                    {...register('ngoName', { required: userType === 'NGO' ? 'Required' : false })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-white"
                     placeholder="E.g., Animal Welfare Foundation"
                   />
-                  {errors.ngoName && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                      <span className="text-lg">•</span> {errors.ngoName.message}
-                    </p>
-                  )}
+                  {errors.ngoName && <p className="text-sm text-red-500">{errors.ngoName.message}</p>}
                 </div>
 
-                {/* Address */}
-                <div>
-                  <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">
-                    NGO Address *
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Address *</label>
                   <input
-                    {...register('address', { 
-                      required: userType === 'NGO' ? 'Address is required' : false 
-                    })}
-                    type="text"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
-                    placeholder="E.g., 123 Main Street, City, State - 400001"
+                    {...register('address', { required: userType === 'NGO' ? 'Required' : false })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-white"
+                    placeholder="Full address"
                   />
-                  {errors.address && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                      <span className="text-lg">•</span> {errors.address.message}
-                    </p>
-                  )}
+                  {errors.address && <p className="text-sm text-red-500">{errors.address.message}</p>}
                 </div>
 
-                {/* Location Coordinates */}
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="latitude" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Latitude *
-                    </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Latitude *</label>
                     <input
-                      {...register('latitude', { 
-                        required: userType === 'NGO' ? 'Latitude is required' : false,
-                        valueAsNumber: true
-                      })}
+                      {...register('latitude', { required: userType === 'NGO', valueAsNumber: true })}
                       type="number"
                       step="any"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
-                      placeholder="E.g., 19.0760"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-white"
+                      placeholder="19.0760"
                     />
-                    {errors.latitude && (
-                      <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                        <span className="text-lg">•</span> {errors.latitude.message}
-                      </p>
-                    )}
                   </div>
-                  <div>
-                    <label htmlFor="longitude" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Longitude *
-                    </label>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Longitude *</label>
                     <input
-                      {...register('longitude', { 
-                        required: userType === 'NGO' ? 'Longitude is required' : false,
-                        valueAsNumber: true
-                      })}
+                      {...register('longitude', { required: userType === 'NGO', valueAsNumber: true })}
                       type="number"
                       step="any"
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
-                      placeholder="E.g., 72.8777"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-white"
+                      placeholder="72.8777"
                     />
-                    {errors.longitude && (
-                      <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                        <span className="text-lg">•</span> {errors.longitude.message}
-                      </p>
-                    )}
                   </div>
                 </div>
-                <p className="text-xs text-gray-500">
-                  📍 Tip: You can get coordinates from Google Maps by right-clicking on your location
-                </p>
 
-                {/* Description */}
-                <div>
-                  <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
-                    NGO Description <span className="text-gray-400 font-normal">(Optional)</span>
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Description</label>
                   <textarea
                     {...register('description')}
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none resize-none"
-                    placeholder="Briefly describe your NGO's mission and services..."
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-white resize-none"
+                    placeholder="Mission statement..."
                   />
                 </div>
-              </div>
-            )}
 
-            {/* NGO Document Upload - Only for NGO users */}
-            {userType === 'NGO' && (
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  <label className="block text-sm font-semibold text-gray-700">
-                    NGO Registration Document *
-                  </label>
+                <div className="space-y-3 pt-2">
+                  <label className="text-sm font-medium text-gray-700">Registration Document *</label>
+                  <ImageUpload
+                    onUpload={(url) => setRegistrationDocumentUrl(url)}
+                    onRemove={() => setRegistrationDocumentUrl('')}
+                    label="Upload Registration Document"
+                  />
+                  {/* Note: I am assuming ImageUpload is generic enough. If it has blue colors hardcoded, we might need to update it separately, but sticking to logic here. */}
+                  {registrationDocumentUrl && (
+                    <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                      ✓ Uploaded
+                    </p>
+                  )}
                 </div>
-                <p className="text-xs text-gray-600 mb-3">
-                  Upload your NGO registration certificate or official document (PDF, JPG, PNG)
-                </p>
-                <ImageUpload
-                  onUpload={(url) => setRegistrationDocumentUrl(url)}
-                  onRemove={() => setRegistrationDocumentUrl('')}
-                  label="Upload Registration Document"
-                />
-                {registrationDocumentUrl ? (
-                  <p className="mt-2 text-xs text-green-600 flex items-center gap-1">
-                    ✓ Document uploaded successfully
-                  </p>
-                ) : (
-                  <p className="mt-2 text-xs text-blue-600">
-                    📄 This document will be reviewed by admin before your account is activated
-                  </p>
-                )}
               </div>
             )}
 
-            <div className="grid md:grid-cols-2 gap-5">
-              {/* Password */}
-              <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Password
-                </label>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Password</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
                   <input
-                    {...register('password', {
-                      required: 'Password is required',
-                      minLength: { value: 6, message: 'Password must be at least 6 characters' },
-                    })}
+                    {...register('password', { required: 'Required', minLength: { value: 6, message: 'Min 6 chars' } })}
                     type={showPassword ? 'text' : 'password'}
-                    className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
-                    placeholder="Create a password"
+                    className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-gray-50 focus:bg-white"
+                    placeholder="Password"
                   />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600">
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                {errors.password && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                    <span className="text-lg">•</span> {errors.password.message}
-                  </p>
-                )}
+                {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
               </div>
 
-              {/* Confirm Password */}
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Confirm Password
-                </label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Confirm Password</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
+                  <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
                   <input
-                    {...register('confirmPassword', {
-                      required: 'Please confirm your password',
-                      validate: (value) => value === password || 'Passwords do not match',
-                    })}
+                    {...register('confirmPassword', { required: 'Required', validate: val => val === password || ' mismatch' })}
                     type={showConfirmPassword ? 'text' : 'password'}
-                    className="w-full pl-10 pr-12 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all duration-200 outline-none"
-                    placeholder="Confirm your password"
+                    className="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 focus:border-[#004432] focus:ring-4 focus:ring-[#004432]/10 transition-all outline-none bg-gray-50 focus:bg-white"
+                    placeholder="Confirm"
                   />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600">
+                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                {errors.confirmPassword && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                    <span className="text-lg">•</span> {errors.confirmPassword.message}
-                  </p>
-                )}
+                {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>}
               </div>
             </div>
 
-            {/* Terms & Conditions */}
-            <div className="bg-gray-50 rounded-xl p-4 text-xs text-gray-600 text-center">
-              By creating an account, you agree to our{' '}
-              <Link to="/terms" className="text-teal-600 hover:text-teal-700 font-medium">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link to="/privacy" className="text-teal-600 hover:text-teal-700 font-medium">
-                Privacy Policy
-              </Link>
+            <div className="text-xs text-center text-gray-500">
+              By joining, you agree to our <Link to="/terms" className="text-[#004432] font-medium hover:underline">Terms</Link> and <Link to="/privacy" className="text-[#004432] font-medium hover:underline">Privacy Policy</Link>.
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-teal-600 to-cyan-600 text-white py-3.5 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              className="w-full bg-[#004432] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#13735f] shadow-lg shadow-[#004432]/20 hover:shadow-xl hover:shadow-[#004432]/30 transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isLoading ? (
-                <LoadingSpinner size="sm" />
-              ) : (
+              {isLoading ? <LoadingSpinner size="sm" /> : (
                 <>
-                  Create Account
-                  <ArrowRight className="w-5 h-5" />
+                  Create Account <ArrowRight className="w-5 h-5" />
                 </>
               )}
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-center text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                className="font-semibold text-teal-600 hover:text-teal-700 transition-colors"
-              >
-                Sign in
-              </Link>
-            </p>
-          </div>
-        </div>
+          <p className="text-center text-gray-600">
+            Already have an account?{' '}
+            <Link to="/login" className="font-bold text-[#004432] hover:text-[#13735f]">
+              Sign in
+            </Link>
+          </p>
 
-        {/* Back to Home */}
-        <div className="mt-6 text-center">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            ← Back to Home
-          </Link>
+          <div className="text-center">
+            <Link to="/" className="text-sm text-gray-500 hover:text-[#004432] transition-colors">
+              ← Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     </div>
