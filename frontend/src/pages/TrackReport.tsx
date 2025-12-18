@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
-import { Search, Filter, MapPin, Calendar, FileText, Building2 } from 'lucide-react';
+import { Search, Filter, MapPin, Calendar, FileText, Building2, UserPlus, X, User } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { reportsAPI } from '../utils/api';
+import { reportsAPI, ngoAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import type { AnimalReport } from '../types';
+import type { AnimalReport, UserResponse } from '../types';
 import { getStatusColor, getStatusText } from '../utils/auth';
 import toast from 'react-hot-toast';
 import L from 'leaflet';
@@ -34,39 +34,6 @@ const TrackReport: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
-
-  // State for real-time worker locations: mapping trackingId -> {lat, lng}
-  const [workerLocations, setWorkerLocations] = useState<Record<string, { lat: number; lng: number }>>({});
-
-  useEffect(() => {
-    socketService.connect();
-    return () => socketService.disconnect();
-  }, []);
-
-  // Subscribe to updates for active reports
-  useEffect(() => {
-    // We only need to subscribe for reports that are active and have a worker assigned (technically anyone can subscribe)
-    const activeReports = reports.filter(r => !['CASE_RESOLVED', 'SUBMITTED'].includes(r.status));
-
-    const subscriptions = activeReports.map(report => {
-      const topic = `/topic/case/${report.trackingId}`;
-      return socketService.subscribe(topic, (data) => {
-        // Update state with new worker location
-        setWorkerLocations(prev => ({
-          ...prev,
-          [data.trackingId]: { lat: data.latitude, lng: data.longitude }
-        }));
-
-        // Optional: You could also update the report object itself if you want to persist the last known location in the list view
-      });
-    });
-
-    return () => {
-      subscriptions.forEach(sub => sub.unsubscribe());
-    };
-  }, [reports]);
-
-  // ... (rest of the file)
 
   // Check user role
   const isNGO = user?.roles?.includes('NGO');
@@ -112,6 +79,61 @@ const TrackReport: React.FC = () => {
 
     return matchesSearch && matchesFilter;
   });
+
+  // Load workers when modal opens
+  const loadWorkers = async () => {
+    if (!user?.ngoId) return;
+    try {
+      const workersList = await ngoAPI.getWorkers(user.ngoId);
+      // Filter only active workers
+      setWorkers(workersList.filter(w => w.enabled));
+    } catch (error) {
+      console.error('Failed to load workers:', error);
+      toast.error('Failed to load workers list');
+    }
+  };
+
+  // Open assign worker modal
+  const openAssignModal = (report: AnimalReport) => {
+    setSelectedReport(report);
+    setSelectedWorkerId(null);
+    setIsAssignModalOpen(true);
+    loadWorkers();
+  };
+
+  // Close assign worker modal
+  const closeAssignModal = () => {
+    setSelectedReport(null);
+    setSelectedWorkerId(null);
+    setIsAssignModalOpen(false);
+  };
+
+  // Handle worker assignment
+  const handleAssignWorker = async () => {
+    if (!selectedReport || !selectedWorkerId) {
+      toast.error('Please select a worker');
+      return;
+    }
+
+    const selectedWorker = workers.find(w => w.id === selectedWorkerId);
+    if (!selectedWorker) {
+      toast.error('Worker not found');
+      return;
+    }
+
+    setIsAssigning(true);
+    try {
+      await reportsAPI.assignReport(selectedReport.trackingId, selectedWorkerId, selectedWorker.fullName);
+      toast.success(`Case assigned to ${selectedWorker.fullName}`);
+      closeAssignModal();
+      fetchReports(); // Refresh the reports list
+    } catch (error) {
+      console.error('Failed to assign worker:', error);
+      toast.error('Failed to assign worker to case');
+    } finally {
+      setIsAssigning(false);
+    }
+  };
 
   // Get page title based on role
   const getPageTitle = () => {
@@ -306,19 +328,31 @@ const TrackReport: React.FC = () => {
 
                     {/* Show worker assignment for NGO */}
                     {isNGO && (
-                      <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-4 text-sm">
-                        {report.assignedWorkerName ? (
+                      <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4 text-sm">
+                        <div className="flex flex-wrap items-center gap-4">
+                          {report.assignedWorkerName ? (
+                            <div className="flex items-center">
+                              <span className="text-gray-500 mr-2">Assigned Worker:</span>
+                              <span className="font-medium text-purple-600">{report.assignedWorkerName}</span>
+                            </div>
+                          ) : (
+                            <span className="text-amber-600 font-medium">⚠️ No worker assigned</span>
+                          )}
                           <div className="flex items-center">
-                            <span className="text-gray-500 mr-2">Assigned Worker:</span>
-                            <span className="font-medium text-purple-600">{report.assignedWorkerName}</span>
+                            <span className="text-gray-500 mr-2">Reporter:</span>
+                            <span className="font-medium text-gray-700">{report.reporterName}</span>
                           </div>
-                        ) : (
-                          <span className="text-amber-600 font-medium">⚠️ No worker assigned</span>
-                        )}
-                        <div className="flex items-center">
-                          <span className="text-gray-500 mr-2">Reporter:</span>
-                          <span className="font-medium text-gray-700">{report.reporterName}</span>
                         </div>
+                        {/* Assign worker button - only show if no worker assigned and case is not resolved */}
+                        {!report.assignedWorkerId && report.status !== 'CASE_RESOLVED' && (
+                          <button
+                            onClick={() => openAssignModal(report)}
+                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm shadow-sm"
+                          >
+                            <UserPlus className="h-4 w-4" />
+                            Assign Worker
+                          </button>
+                        )}
                       </div>
                     )}
 
@@ -410,6 +444,128 @@ const TrackReport: React.FC = () => {
               return null;
             })}
           </MapContainer>
+        </div>
+      )}
+
+      {/* Worker Assignment Modal */}
+      {isAssignModalOpen && selectedReport && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-blue-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-xl">
+                    <UserPlus className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">Assign Worker</h3>
+                    <p className="text-sm text-gray-500">Case #{selectedReport.trackingId}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeAssignModal}
+                  className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              {/* Case Summary */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="font-bold text-gray-800 capitalize">{selectedReport.animalType}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${getStatusColor(selectedReport.status)}`}>
+                    {getStatusText(selectedReport.status)}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 line-clamp-2">{selectedReport.condition}</p>
+                <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+                  <MapPin className="h-3 w-3" />
+                  {selectedReport.address || 'Location not specified'}
+                </div>
+              </div>
+
+              {/* Worker Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select a Worker
+                </label>
+                {workers.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-xl">
+                    <User className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">No workers available</p>
+                    <p className="text-gray-400 text-xs mt-1">Add workers in Manage NGO section</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {workers.map((worker) => (
+                      <label
+                        key={worker.id}
+                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedWorkerId === worker.id
+                            ? 'border-purple-500 bg-purple-50'
+                            : 'border-gray-100 hover:border-purple-200 hover:bg-purple-50/50'
+                          }`}
+                      >
+                        <input
+                          type="radio"
+                          name="worker"
+                          value={worker.id}
+                          checked={selectedWorkerId === worker.id}
+                          onChange={() => setSelectedWorkerId(worker.id)}
+                          className="sr-only"
+                        />
+                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold flex-shrink-0">
+                          {worker.fullName.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900">{worker.fullName}</p>
+                          <p className="text-sm text-gray-500 truncate">{worker.email}</p>
+                        </div>
+                        {selectedWorkerId === worker.id && (
+                          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-3">
+              <button
+                onClick={closeAssignModal}
+                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-white transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignWorker}
+                disabled={!selectedWorkerId || isAssigning}
+                className="flex-1 px-4 py-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isAssigning ? (
+                  <>
+                    <LoadingSpinner size="sm" variant="white" />
+                    Assigning...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4" />
+                    Assign Worker
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </DashboardLayout>

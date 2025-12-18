@@ -13,8 +13,8 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
 import { reportsAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
-import type { AnimalReport } from '../../types';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, Polyline } from 'react-leaflet';
+import type { AnimalReport, NGO } from '../../types';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { socketService } from '../../utils/socket';
@@ -62,6 +62,8 @@ const NgoDashboard: React.FC = () => {
     inProgress: 0,
     available: 0
   });
+  const [ngoInfo, setNgoInfo] = useState<NGO | null>(null);
+  const [acceptingReportId, setAcceptingReportId] = useState<number | null>(null);
 
   // Default center (Mumbai/Pune area or dynamic based on data)
   const defaultCenter: [number, number] = [19.0760, 72.8777];
@@ -94,6 +96,17 @@ const NgoDashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
+      // Fetch NGO info if not already loaded
+      let currentNgoInfo = ngoInfo;
+      if (!currentNgoInfo && user?.ngoId) {
+        try {
+          currentNgoInfo = await ngoAPI.getNgoById(user.ngoId);
+          setNgoInfo(currentNgoInfo);
+        } catch (error) {
+          console.error('Failed to load NGO info:', error);
+        }
+      }
+
       const [available, assigned] = await Promise.all([
         reportsAPI.getAvailableReports(),
         user?.ngoId ? reportsAPI.getReportsByNgo(user.ngoId) : Promise.resolve([]),
@@ -134,6 +147,27 @@ const NgoDashboard: React.FC = () => {
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle accepting a case
+  const handleAcceptCase = async (report: AnimalReport) => {
+    if (!user?.ngoId || !ngoInfo) {
+      toast.error('NGO information not found');
+      return;
+    }
+
+    setAcceptingReportId(report.id);
+    try {
+      await reportsAPI.acceptReport(report.trackingId, user.ngoId, ngoInfo.name);
+      toast.success(`Case #${report.trackingId} accepted! Go to Track My Cases to assign a worker.`);
+      // Refresh dashboard data
+      loadDashboardData();
+    } catch (error) {
+      console.error('Failed to accept case:', error);
+      toast.error('Failed to accept case');
+    } finally {
+      setAcceptingReportId(null);
     }
   };
 
@@ -333,8 +367,19 @@ const NgoDashboard: React.FC = () => {
                       <span className="text-[10px] font-bold bg-white border border-gray-200 px-1.5 py-0.5 rounded text-gray-500">#{report.trackingId}</span>
                     </div>
                     <p className="text-xs text-gray-500 mb-2 line-clamp-1">{report.address}</p>
-                    <button className="w-full py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors opacity-90 hover:opacity-100 shadow-sm">
-                      Accept Case
+                    <button
+                      onClick={() => handleAcceptCase(report)}
+                      disabled={acceptingReportId === report.id}
+                      className="w-full py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors opacity-90 hover:opacity-100 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                    >
+                      {acceptingReportId === report.id ? (
+                        <>
+                          <LoadingSpinner size="sm" variant="white" />
+                          Accepting...
+                        </>
+                      ) : (
+                        'Accept Case'
+                      )}
                     </button>
                   </div>
                 ))}
