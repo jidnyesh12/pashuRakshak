@@ -35,8 +35,17 @@ const TrackReport: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
 
+  // State for worker assignment
+  const [workers, setWorkers] = useState<UserResponse[]>([]);
+  const [selectedReport, setSelectedReport] = useState<AnimalReport | null>(null);
+  const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [workerLocations, setWorkerLocations] = useState<Record<string, { lat: number; lng: number }>>({});
+
   // Check user role
   const isNGO = user?.roles?.includes('NGO');
+  const isWorker = user?.roles?.includes('NGO_WORKER');
   const isAdmin = user?.roles?.includes('ADMIN');
 
   useEffect(() => {
@@ -48,8 +57,11 @@ const TrackReport: React.FC = () => {
       setIsLoading(true);
       let data: AnimalReport[];
 
-      if (isNGO && user?.ngoId) {
-        // For NGO users, fetch reports assigned to their NGO
+      if (isWorker && user?.id) {
+        // For Workers, fetch only their assigned tasks
+        data = await reportsAPI.getWorkerTasks(user.id);
+      } else if (isNGO && user?.ngoId) {
+        // For NGO users (Admins), fetch reports assigned to their NGO
         data = await reportsAPI.getReportsByNgo(user.ngoId);
       } else if (isAdmin) {
         // For admin, get all reports (this uses a different endpoint that returns all)
@@ -506,8 +518,8 @@ const TrackReport: React.FC = () => {
                       <label
                         key={worker.id}
                         className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedWorkerId === worker.id
-                            ? 'border-purple-500 bg-purple-50'
-                            : 'border-gray-100 hover:border-purple-200 hover:bg-purple-50/50'
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-100 hover:border-purple-200 hover:bg-purple-50/50'
                           }`}
                       >
                         <input

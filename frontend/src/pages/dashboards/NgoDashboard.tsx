@@ -91,8 +91,10 @@ const NgoDashboard: React.FC = () => {
   }, [inProgressReports]);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user]);
 
   const loadDashboardData = async () => {
     try {
