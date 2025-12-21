@@ -11,26 +11,39 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, fullScreen = false }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        isExpanded={isSidebarExpanded}
+        onToggleExpand={() => setIsSidebarExpanded(!isSidebarExpanded)}
       />
 
       <TopHeader
         onMenuClick={() => setIsSidebarOpen(true)}
+        isSidebarExpanded={isSidebarExpanded}
       />
 
-      <main className={`lg:pl-64 pt-16 min-h-screen transition-all duration-300 ${fullScreen ? '' : ''}`}>
-        <div className={fullScreen ? "h-[calc(100vh-64px)] overflow-hidden" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"}>
+      {/* Main Content - Adjusts based on rail width */}
+      <main 
+        className={`
+          pt-16 min-h-screen transition-all duration-300 ease-out
+          lg:pl-16
+        `}
+      >
+        <div className={
+          fullScreen 
+            ? "h-[calc(100vh-64px)] overflow-hidden" 
+            : "max-w-7xl mx-auto px-6 lg:px-8 py-8"
+        }>
           {children}
         </div>
       </main>
     </div>
   );
 };
-
 
 export default DashboardLayout;
