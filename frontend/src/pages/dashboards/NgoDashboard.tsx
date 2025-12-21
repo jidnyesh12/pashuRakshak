@@ -4,9 +4,7 @@ import {
   CheckCircle,
   AlertTriangle,
   Activity,
-  Search,
-  Zap,
-  Layers
+  Zap
 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -407,19 +405,6 @@ const NgoDashboard: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* Floating Action Buttons - Bottom Right */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 md:translate-x-0 md:left-auto md:right-8 z-[1000] flex gap-3 pointer-events-auto">
-          <button className="bg-white text-[#004432] px-6 py-3 rounded-full shadow-lg font-bold hover:bg-[#004432] hover:text-white transition-all flex items-center gap-2 border border-[#004432]/10">
-            <Layers className="h-5 w-5" />
-            Map Layers
-          </button>
-          <button className="bg-[#004432] text-white px-6 py-3 rounded-full shadow-lg font-bold hover:bg-[#13735f] transition-all flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Find Reports
-          </button>
-        </div>
-
       </div>
     </DashboardLayout>
   );

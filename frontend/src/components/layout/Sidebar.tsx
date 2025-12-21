@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   PlusCircle,
   History,
-  AlertCircle,
   FileText,
   Building2,
   User,
@@ -50,7 +49,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { icon: LayoutDashboard, label: 'Overview', path: '/user/dashboard' },
     { icon: PlusCircle, label: 'Report Animal', path: '/report-animal' },
     { icon: History, label: 'Track History', path: '/track-report' },
-    { icon: AlertCircle, label: 'Emergency Help', path: '/emergency' },
     { icon: User, label: 'Profile', path: '/profile' },
   ];
 

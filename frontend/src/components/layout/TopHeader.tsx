@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Menu, Phone } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface TopHeaderProps {
@@ -27,21 +27,6 @@ const TopHeader: React.FC<TopHeaderProps> = ({ onMenuClick }) => {
 
         {/* Right: Actions */}
         <div className="flex items-center space-x-4">
-          {/* Emergency Button */}
-          <a
-            href="tel:112"
-            className="hidden sm:flex items-center px-4 py-2 bg-red-50 text-red-600 rounded-full text-sm font-medium hover:bg-red-100 transition-colors animate-pulse"
-          >
-            <Phone className="h-4 w-4 mr-2" />
-            Emergency: 112
-          </a>
-
-          {/* Notifications */}
-          <button className="p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative">
-            <Bell className="h-6 w-6" />
-            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-          </button>
-
           {/* Role Badge */}
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#e6ce00]/20 text-[#004432] border border-[#e6ce00]/30 capitalize">
             {user?.roles?.[0]?.toLowerCase() || 'User'}

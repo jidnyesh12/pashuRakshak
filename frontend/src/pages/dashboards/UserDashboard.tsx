@@ -303,12 +303,6 @@ const UserDashboard: React.FC = () => {
                 </div>
                 <span className="font-medium">Report Animal</span>
               </Link>
-              <Link to="/emergency" className="flex items-center p-3 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 transition-colors group">
-                <div className="p-2 bg-white rounded-lg mr-3 shadow-sm group-hover:scale-110 transition-transform">
-                  <AlertTriangle className="h-5 w-5" />
-                </div>
-                <span className="font-medium">Emergency Help</span>
-              </Link>
               <Link to="/track-report" className="flex items-center p-3 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors group">
                 <div className="p-2 bg-white rounded-lg mr-3 shadow-sm group-hover:scale-110 transition-transform">
                   <TrendingUp className="h-5 w-5" />
