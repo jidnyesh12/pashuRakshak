@@ -22,21 +22,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, fullScreen 
         onToggleExpand={() => setIsSidebarExpanded(!isSidebarExpanded)}
       />
 
-      <TopHeader
-        onMenuClick={() => setIsSidebarOpen(true)}
-        isSidebarExpanded={isSidebarExpanded}
-      />
+      {/* Hide TopHeader in fullScreen mode */}
+      {!fullScreen && (
+        <TopHeader
+          onMenuClick={() => setIsSidebarOpen(true)}
+          isSidebarExpanded={isSidebarExpanded}
+        />
+      )}
 
-      {/* Main Content - Adjusts based on rail width */}
+      {/* Main Content - Adjusts based on rail width and fullScreen mode */}
       <main 
         className={`
-          pt-16 min-h-screen transition-all duration-300 ease-out
+          min-h-screen transition-all duration-300 ease-out
           lg:pl-16
+          ${fullScreen ? '' : 'pt-16'}
         `}
       >
         <div className={
           fullScreen 
-            ? "h-[calc(100vh-64px)] overflow-hidden" 
+            ? "h-screen lg:h-screen overflow-hidden" 
             : "max-w-7xl mx-auto px-6 lg:px-8 py-8"
         }>
           {children}
@@ -47,3 +51,4 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, fullScreen 
 };
 
 export default DashboardLayout;
+

@@ -4,7 +4,8 @@ import {
   CheckCircle,
   AlertTriangle,
   Activity,
-  Zap
+  Zap,
+  GripVertical
 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -62,6 +63,11 @@ const NgoDashboard: React.FC = () => {
   });
   const [ngoInfo, setNgoInfo] = useState<NGO | null>(null);
   const [acceptingReportId, setAcceptingReportId] = useState<number | null>(null);
+
+  // Draggable panel state - default at 30% top, 40% left
+  const [panelPosition, setPanelPosition] = useState({ x: 0.4, y: 0.3 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   // Default center (Mumbai/Pune area or dynamic based on data)
   const defaultCenter: [number, number] = [19.0760, 72.8777];
@@ -189,6 +195,49 @@ const NgoDashboard: React.FC = () => {
     }
   };
 
+  // Drag handlers for the floating panel
+  const handleDragStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const panel = e.currentTarget.parentElement;
+    if (panel) {
+      const rect = panel.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
+    setIsDragging(true);
+  };
+
+  const handleDrag = (e: MouseEvent) => {
+    if (!isDragging) return;
+    const container = document.getElementById('map-container');
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      const x = (e.clientX - dragOffset.x - rect.left) / rect.width;
+      const y = (e.clientY - dragOffset.y - rect.top) / rect.height;
+      setPanelPosition({
+        x: Math.max(0, Math.min(0.7, x)),
+        y: Math.max(0, Math.min(0.6, y))
+      });
+    }
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleDrag);
+      window.addEventListener('mouseup', handleDragEnd);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleDrag);
+      window.removeEventListener('mouseup', handleDragEnd);
+    };
+  }, [isDragging, dragOffset]);
+
   if (loading) {
     return (
       <DashboardLayout fullScreen>
@@ -201,14 +250,15 @@ const NgoDashboard: React.FC = () => {
 
   return (
     <DashboardLayout fullScreen>
-      <div className="relative w-full h-full">
-        {/* Map Layer */}
-        <MapContainer
-          center={defaultCenter}
-          zoom={12}
-          zoomControl={false}
-          style={{ height: '100%', width: '100%' }}
-        >
+      <div id="map-container" className="relative w-full h-full overflow-hidden">
+        {/* Map Layer - z-index set low so it stays behind sidebar */}
+        <div className="absolute inset-0 z-0">
+          <MapContainer
+            center={defaultCenter}
+            zoom={12}
+            zoomControl={false}
+            style={{ height: '100%', width: '100%' }}
+          >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
@@ -322,64 +372,70 @@ const NgoDashboard: React.FC = () => {
               </Popup>
             </Marker>
           ))}
-        </MapContainer>
+          </MapContainer>
+        </div>
 
-        {/* Floating UI Overlay - Top Stats Bar */}
-        <div className="absolute top-4 left-4 right-4 md:left-8 md:right-8 z-[1000] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pointer-events-none">
-          {/* Welcome & Context */}
-          <div className="bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-white/20 pointer-events-auto">
-            <h1 className="text-xl font-bold text-[#004432] flex items-center gap-2">
-              NGO Dashboard <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Live Map</span>
-            </h1>
-            <p className="text-sm text-gray-600">Overview of operations and impact</p>
-          </div>
-
-          {/* Stats Pills */}
-          <div className="flex gap-3 pointer-events-auto overflow-x-auto max-w-full pb-2 md:pb-0">
-            <div className="bg-white/90 backdrop-blur-md px-4 py-3 rounded-xl shadow-md border border-green-100 flex items-center gap-3 min-w-[140px]">
-              <div className="p-2 bg-green-100 rounded-lg text-[#004432]">
-                <CheckCircle className="h-5 w-5" />
+        {/* Stats Pills - Top Right Only */}
+        <div className="absolute top-4 right-4 lg:right-8 z-10 flex items-center gap-2 pointer-events-none">
+          <div className="flex gap-2 pointer-events-auto">
+            <div className="bg-white/90 backdrop-blur-md px-3 py-2 rounded-xl shadow-md border border-green-100 flex items-center gap-2">
+              <div className="p-1.5 bg-green-100 rounded-lg text-[#004432]">
+                <CheckCircle className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-bold uppercase">Solved</p>
-                <p className="text-xl font-bold text-[#004432]">{stats.completed}</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase">Solved</p>
+                <p className="text-lg font-bold text-[#004432] leading-none">{stats.completed}</p>
               </div>
             </div>
-            <div className="bg-white/90 backdrop-blur-md px-4 py-3 rounded-xl shadow-md border border-yellow-100 flex items-center gap-3 min-w-[140px]">
-              <div className="p-2 bg-yellow-100 rounded-lg text-yellow-700">
-                <Activity className="h-5 w-5" />
+            <div className="bg-white/90 backdrop-blur-md px-3 py-2 rounded-xl shadow-md border border-yellow-100 flex items-center gap-2">
+              <div className="p-1.5 bg-yellow-100 rounded-lg text-yellow-700">
+                <Activity className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-bold uppercase">Active</p>
-                <p className="text-xl font-bold text-gray-800">{stats.inProgress}</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase">Active</p>
+                <p className="text-lg font-bold text-gray-800 leading-none">{stats.inProgress}</p>
               </div>
             </div>
-            <div className="bg-white/90 backdrop-blur-md px-4 py-3 rounded-xl shadow-md border border-red-100 flex items-center gap-3 min-w-[140px]">
-              <div className="p-2 bg-red-100 rounded-lg text-red-600">
-                <AlertTriangle className="h-5 w-5" />
+            <div className="bg-white/90 backdrop-blur-md px-3 py-2 rounded-xl shadow-md border border-red-100 flex items-center gap-2">
+              <div className="p-1.5 bg-red-100 rounded-lg text-red-600">
+                <AlertTriangle className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-bold uppercase">Alerts</p>
-                <p className="text-xl font-bold text-red-600 animate-pulse">{stats.available}</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase">Alerts</p>
+                <p className="text-lg font-bold text-red-600 leading-none">{stats.available}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Floating Sidebar - Left (Alerts) */}
+        {/* Draggable Floating Panel - Live Alerts */}
         {availableReports.length > 0 && (
-          <div className="absolute top-24 left-4 md:left-8 w-80 max-h-[calc(100vh-140px)] overflow-y-auto z-[1000] space-y-3 pointer-events-none hidden lg:block">
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden pointer-events-auto border border-red-100">
-              <div className="p-4 border-b border-gray-100 bg-red-50/50 flex justify-between items-center">
-                <h3 className="font-bold text-red-800 flex items-center gap-2">
-                  <Zap className="h-4 w-4 fill-red-600 text-red-600" />
-                  Live Alerts
-                </h3>
+          <div 
+            className="absolute w-72 lg:w-80 max-h-[50vh] overflow-hidden z-10 transition-shadow duration-200"
+            style={{
+              left: `calc(${panelPosition.x * 100}% + 80px)`,
+              top: `${panelPosition.y * 100}%`,
+              cursor: isDragging ? 'grabbing' : 'default'
+            }}
+          >
+            <div className={`bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-red-100 ${isDragging ? 'shadow-2xl ring-2 ring-red-200' : ''}`}>
+              {/* Drag Handle */}
+              <div 
+                className="p-3 border-b border-gray-100 bg-red-50/50 flex justify-between items-center cursor-grab active:cursor-grabbing"
+                onMouseDown={handleDragStart}
+              >
+                <div className="flex items-center gap-2">
+                  <GripVertical className="h-4 w-4 text-red-300" />
+                  <h3 className="font-bold text-red-800 flex items-center gap-2">
+                    <Zap className="h-4 w-4 fill-red-600 text-red-600" />
+                    Live Alerts
+                  </h3>
+                </div>
                 <span className="text-xs font-bold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">{availableReports.length}</span>
               </div>
-              <div className="divide-y divide-gray-50 max-h-[400px] overflow-y-auto">
+              <div className="divide-y divide-gray-50 max-h-[35vh] overflow-y-auto">
                 {availableReports.map(report => (
-                  <div key={report.id} className="p-4 hover:bg-red-50/30 transition-colors group cursor-pointer">
+                  <div key={report.id} className="p-4 hover:bg-red-50/30 transition-colors group">
                     <div className="flex justify-between items-start mb-1">
                       <span className="font-bold text-gray-800 capitalize">{report.animalType}</span>
                       <span className="text-[10px] font-bold bg-white border border-gray-200 px-1.5 py-0.5 rounded text-gray-500">#{report.trackingId}</span>
@@ -388,7 +444,7 @@ const NgoDashboard: React.FC = () => {
                     <button
                       onClick={() => handleAcceptCase(report)}
                       disabled={acceptingReportId === report.id}
-                      className="w-full py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors opacity-90 hover:opacity-100 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                      className="w-full py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
                     >
                       {acceptingReportId === report.id ? (
                         <>
