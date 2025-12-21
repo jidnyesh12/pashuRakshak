@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Search, Filter, MapPin, Calendar, FileText, Building2, UserPlus, X, User } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { reportsAPI, ngoAPI } from '../utils/api';
+import { reportsAPI, ngoAPI, adminAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import type { AnimalReport, UserResponse } from '../types';
 import { getStatusColor, getStatusText } from '../utils/auth';
@@ -55,10 +55,10 @@ const TrackReport: React.FC = () => {
         // For NGO users, fetch reports assigned to their NGO
         data = await reportsAPI.getReportsByNgo(user.ngoId);
       } else if (isAdmin) {
-        // For admin, get all reports (this uses a different endpoint that returns all)
-        data = await reportsAPI.getAllReports();
+        // For admin, get all reports using admin API (bypasses user filtering)
+        data = await adminAPI.getAllReports();
       } else {
-        // For regular users, get their own reports
+        // For regular users, get their own reports (filtered by their email on backend)
         data = await reportsAPI.getAllReports();
       }
 

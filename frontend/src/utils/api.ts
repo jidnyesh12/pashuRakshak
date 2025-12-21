@@ -280,4 +280,86 @@ export const uploadAPI = {
   },
 };
 
+// Admin API
+export const adminAPI = {
+  // Dashboard Stats
+  getDashboardStats: async (): Promise<any> => {
+    const response = await api.get('/admin/dashboard/stats');
+    return response.data;
+  },
+
+  getUserStats: async (): Promise<any> => {
+    const response = await api.get('/admin/users/stats');
+    return response.data;
+  },
+
+  getNgoStats: async (): Promise<any> => {
+    const response = await api.get('/admin/ngos/stats');
+    return response.data;
+  },
+
+  // Reports Management
+  getAllReports: async (): Promise<any[]> => {
+    const response = await api.get('/admin/reports');
+    return response.data;
+  },
+
+  getReportsByStatus: async (status: string): Promise<any[]> => {
+    const response = await api.get(`/admin/reports/status/${status}`);
+    return response.data;
+  },
+
+  // NGO Representative Management
+  approveNgoRepresentative: async (userId: number): Promise<{ message: string }> => {
+    const response = await api.post(`/admin/users/${userId}/approve-ngo`);
+    return response.data;
+  },
+
+  rejectNgoRepresentative: async (userId: number, reason?: string): Promise<{ message: string }> => {
+    const response = await api.post(`/admin/users/${userId}/reject-ngo`, { reason });
+    return response.data;
+  },
+
+  // Export Endpoints
+  exportReports: async (): Promise<Blob> => {
+    const response = await api.get('/admin/export/reports', {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  exportUsers: async (): Promise<Blob> => {
+    const response = await api.get('/admin/export/users', {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  exportNgos: async (): Promise<Blob> => {
+    const response = await api.get('/admin/export/ngos', {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  exportPendingNgoRepresentatives: async (): Promise<Blob> => {
+    const response = await api.get('/admin/export/ngo-representatives/pending', {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Helper to download blob as file
+  downloadFile: (blob: Blob, filename: string) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
+};
+
 export default api;
