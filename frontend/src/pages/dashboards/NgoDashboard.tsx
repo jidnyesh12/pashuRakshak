@@ -11,10 +11,10 @@ import {
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
-import { reportsAPI } from '../../utils/api';
+import { reportsAPI, ngoAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import type { AnimalReport, NGO } from '../../types';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { socketService } from '../../utils/socket';
@@ -75,18 +75,36 @@ const NgoDashboard: React.FC = () => {
 
   // Subscribe to real-time updates for in-progress reports
   useEffect(() => {
-    const subscriptions = inProgressReports.map(report => {
-      const topic = `/topic/case/${report.trackingId}`;
-      return socketService.subscribe(topic, (data) => {
-        setWorkerLocations(prev => ({
-          ...prev,
-          [data.trackingId]: { lat: data.latitude, lng: data.longitude }
-        }));
+    // Only subscribe if socket is connected and we have reports
+    if (!socketService.isConnected() || inProgressReports.length === 0) {
+      return;
+    }
+
+    const subscriptions: ReturnType<typeof socketService.subscribe>[] = [];
+    
+    try {
+      inProgressReports.forEach(report => {
+        const topic = `/topic/case/${report.trackingId}`;
+        const sub = socketService.subscribe(topic, (data) => {
+          setWorkerLocations(prev => ({
+            ...prev,
+            [data.trackingId]: { lat: data.latitude, lng: data.longitude }
+          }));
+        });
+        subscriptions.push(sub);
       });
-    });
+    } catch (error) {
+      console.error('Failed to subscribe to socket topics:', error);
+    }
 
     return () => {
-      subscriptions.forEach(sub => sub.unsubscribe());
+      subscriptions.forEach(sub => {
+        try {
+          sub?.unsubscribe();
+        } catch (e) {
+          // Ignore unsubscribe errors
+        }
+      });
     };
   }, [inProgressReports]);
 

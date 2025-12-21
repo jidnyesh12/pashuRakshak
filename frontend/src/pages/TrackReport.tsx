@@ -23,10 +23,8 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// ... (imports)
 import { socketService } from '../utils/socket';
 
-// ... (inside component)
 const TrackReport: React.FC = () => {
   const { user } = useAuth();
   const [reports, setReports] = useState<AnimalReport[]>([]);

@@ -47,17 +47,27 @@ class SocketService {
         }
     }
 
-    subscribe(topic: string, callback: (message: any) => void): StompSubscription {
-        if (!this.client.active) {
-            console.warn('Socket not active, attempting to connect...');
-            this.client.activate();
+    subscribe(topic: string, callback: (message: any) => void): StompSubscription | { unsubscribe: () => void } {
+        // Return a no-op subscription if not connected
+        if (!this.client.active || !this.connected) {
+            console.warn('Socket not connected, returning no-op subscription');
+            return {
+                id: '',
+                unsubscribe: () => { /* no-op */ }
+            } as StompSubscription;
         }
 
-        // Add a small delay/retry or ensure connected before subscribing if needed
-        // For simplicity, we assume the component handles connection timing or we queue
-        return this.client.subscribe(topic, (message) => {
-            callback(JSON.parse(message.body));
-        });
+        try {
+            return this.client.subscribe(topic, (message) => {
+                callback(JSON.parse(message.body));
+            });
+        } catch (error) {
+            console.error('Failed to subscribe to topic:', topic, error);
+            return {
+                id: '',
+                unsubscribe: () => { /* no-op */ }
+            } as StompSubscription;
+        }
     }
 
     send(destination: string, body: any) {
