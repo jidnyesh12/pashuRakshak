@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { socketService } from '../../utils/socket';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -43,6 +44,57 @@ const WorkerDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [workerLocation, setWorkerLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [locationLoading, setLocationLoading] = useState(false);
+    const [isTracking, setIsTracking] = useState(false);
+
+    useEffect(() => {
+        // Connect to WebSocket
+        socketService.connect();
+
+        return () => {
+            socketService.disconnect();
+        };
+    }, []);
+
+    // Effect to track and broadcast location
+    useEffect(() => {
+        let watchId: number;
+
+        if (navigator.geolocation && user?.id) {
+            setIsTracking(true);
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    setWorkerLocation({ lat: latitude, lng: longitude });
+
+                    // Broadcast location for all active tasks
+                    // In a real app, you might want to only broadcast for the *currently active* task or have the backend handle fan-out
+                    // For this demo, we'll broadcast to all non-resolved tasks assigned to this worker
+                    const activeTasks = tasks.filter(t => t.status !== 'CASE_RESOLVED');
+                    activeTasks.forEach(task => {
+                        socketService.send('/app/location.update', {
+                            trackingId: task.trackingId,
+                            workerId: user.id,
+                            latitude: latitude,
+                            longitude: longitude
+                        });
+                    });
+                },
+                (error) => {
+                    console.error('Error watching location:', error);
+                    setIsTracking(false);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        return () => {
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+        };
+    }, [tasks, user]);
 
     useEffect(() => {
         const fetchTasks = async () => {
@@ -127,6 +179,20 @@ const WorkerDashboard: React.FC = () => {
     return (
         <DashboardLayout title="My Assigned Tasks" role="NGO_WORKER">
             <div className="space-y-6">
+                {/* Live Tracking Indicator */}
+                {isTracking && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-blue-700">
+                            <span className="relative flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                            </span>
+                            <span className="text-sm font-medium">Live Location Broadcast Active</span>
+                        </div>
+                        <span className="text-xs text-blue-500">Your location is being shared with NGOs and Users</span>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div className="bg-[#004432]/5 p-6 rounded-2xl border border-[#004432]/10">
                         <h3 className="text-[#004432] font-bold text-lg mb-1">Total Assigned</h3>

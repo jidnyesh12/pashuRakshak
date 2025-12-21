@@ -64,12 +64,21 @@ public class AnimalReportController {
             @PathVariable String trackingId,
             @RequestBody Map<String, Object> request) {
 
-        Long ngoId = Long.valueOf(request.get("ngoId").toString());
-        String ngoName = request.get("ngoName").toString();
+        try {
+            if (request.get("ngoId") == null || request.get("ngoName") == null) {
+                return ResponseEntity.badRequest().build();
+            }
 
-        Optional<ReportResponse> report = reportService.acceptReportByTrackingId(trackingId, ngoId, ngoName);
-        return report.map(r -> ResponseEntity.ok(r))
-                .orElse(ResponseEntity.badRequest().build());
+            Long ngoId = Long.valueOf(request.get("ngoId").toString());
+            String ngoName = request.get("ngoName").toString();
+
+            Optional<ReportResponse> report = reportService.acceptReportByTrackingId(trackingId, ngoId, ngoName);
+            return report.map(r -> ResponseEntity.ok(r))
+                    .orElse(ResponseEntity.badRequest().build()); // Returns 400 if report not found or status invalid
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PostMapping("/{trackingId}/assign")

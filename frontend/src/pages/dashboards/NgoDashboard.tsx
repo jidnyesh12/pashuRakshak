@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   CheckCircle,
@@ -10,12 +11,13 @@ import {
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
-import { reportsAPI, ngoAPI } from '../../utils/api';
+import { reportsAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import type { AnimalReport, NGO } from '../../types';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { socketService } from '../../utils/socket';
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -52,6 +54,8 @@ const NgoDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [availableReports, setAvailableReports] = useState<AnimalReport[]>([]);
   const [resolvedReports, setResolvedReports] = useState<AnimalReport[]>([]);
+  const [inProgressReports, setInProgressReports] = useState<AnimalReport[]>([]);
+  const [workerLocations, setWorkerLocations] = useState<Record<string, { lat: number; lng: number }>>({});
   const [stats, setStats] = useState({
     totalAssigned: 0,
     completed: 0,
@@ -65,8 +69,32 @@ const NgoDashboard: React.FC = () => {
   const defaultCenter: [number, number] = [19.0760, 72.8777];
 
   useEffect(() => {
-    loadDashboardData();
+    socketService.connect();
+    return () => socketService.disconnect();
   }, []);
+
+  // Subscribe to real-time updates for in-progress reports
+  useEffect(() => {
+    const subscriptions = inProgressReports.map(report => {
+      const topic = `/topic/case/${report.trackingId}`;
+      return socketService.subscribe(topic, (data) => {
+        setWorkerLocations(prev => ({
+          ...prev,
+          [data.trackingId]: { lat: data.latitude, lng: data.longitude }
+        }));
+      });
+    });
+
+    return () => {
+      subscriptions.forEach(sub => sub.unsubscribe());
+    };
+  }, [inProgressReports]);
+
+  useEffect(() => {
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user]);
 
   const loadDashboardData = async () => {
     try {
@@ -88,26 +116,36 @@ const NgoDashboard: React.FC = () => {
 
       setAvailableReports(available);
 
-      // Filter resolved cases and limit to top 15
+      // Filter resolved cases
       const resolved = assigned
         .filter(r => r.status === 'CASE_RESOLVED')
-        .slice(0, 15)
         .map(r => ({
           ...r,
-          // Add default coords if missing for demo purposes
-          latitude: r.latitude || (defaultCenter[0] + getRandomOffset()),
+          latitude: r.latitude || (defaultCenter[0] + getRandomOffset()), // Mock coords if missing
           longitude: r.longitude || (defaultCenter[1] + getRandomOffset())
         }));
 
       setResolvedReports(resolved);
 
+      // Filter in-progress cases
+      const inProgress = assigned
+        .filter(r => !['CASE_RESOLVED', 'SUBMITTED', 'REJECTED'].includes(r.status))
+        .map(r => ({
+          ...r,
+          latitude: r.latitude || (defaultCenter[0] + getRandomOffset()),
+          longitude: r.longitude || (defaultCenter[1] + getRandomOffset())
+        }));
+
+      setInProgressReports(inProgress);
+
       setStats({
         totalAssigned: assigned.length,
-        completed: assigned.filter(r => r.status === 'CASE_RESOLVED').length,
-        inProgress: assigned.filter(r => !['CASE_RESOLVED', 'SUBMITTED'].includes(r.status)).length,
+        completed: resolved.length,
+        inProgress: inProgress.length,
         available: available.length
       });
     } catch (error) {
+      console.error(error);
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -164,7 +202,7 @@ const NgoDashboard: React.FC = () => {
           {/* Solved Cases Pins */}
           {resolvedReports.map((report) => (
             <Marker
-              key={report.id}
+              key={`solved-${report.id}`}
               position={[report.latitude!, report.longitude!]}
               icon={solvedIcon}
             >
@@ -182,12 +220,76 @@ const NgoDashboard: React.FC = () => {
             </Marker>
           ))}
 
-          {/* Available Reports Pins (Optional - limited to few for clarity) */}
+          {/* In-Progress Cases (Worker Target) */}
+          {inProgressReports.map((report) => (
+            <Marker
+              key={`progress-${report.id}`}
+              position={[report.latitude!, report.longitude!]}
+              icon={new L.Icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+              })}
+            >
+              <Popup>
+                <div className="p-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Activity className="h-4 w-4 text-orange-600" />
+                    <span className="font-bold text-orange-700">In Progress</span>
+                  </div>
+                  <p className="font-medium">{report.animalType}</p>
+                  <p className="text-xs text-gray-500">Worker: {report.assignedWorkerName || 'Assigned'}</p>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+
+          {/* Live Worker Locations */}
+          {inProgressReports.map(report => {
+            const liveLoc = workerLocations[report.trackingId];
+            if (liveLoc) {
+              return (
+                <React.Fragment key={`worker-${report.trackingId}`}>
+                  <Marker
+                    position={[liveLoc.lat, liveLoc.lng]}
+                    icon={new L.Icon({
+                      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                      iconSize: [25, 41],
+                      iconAnchor: [12, 41],
+                      popupAnchor: [1, -34],
+                      shadowSize: [41, 41]
+                    })}
+                  >
+                    <Popup>
+                      <div className="p-1">
+                        <p className="font-bold text-blue-700 text-xs mb-0">Live Worker</p>
+                        <p className="text-xs text-gray-500">Active</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                  <Polyline
+                    positions={[
+                      [liveLoc.lat, liveLoc.lng],
+                      [report.latitude!, report.longitude!]
+                    ]}
+                    pathOptions={{ color: 'blue', dashArray: '10, 10', opacity: 0.6 }}
+                  />
+                </React.Fragment>
+              );
+            }
+            return null;
+          })}
+
+          {/* Available Reports Pins */}
           {availableReports.slice(0, 5).map((report) => (
             <Marker
-              key={report.id}
+              key={`available-${report.id}`}
               position={[
-                report.latitude || (defaultCenter[0] + 0.05), // Mock offset for demo if missing
+                report.latitude || (defaultCenter[0] + 0.05),
                 report.longitude || (defaultCenter[1] + 0.05)
               ]}
               icon={alertIcon}
@@ -267,7 +369,7 @@ const NgoDashboard: React.FC = () => {
                       <span className="text-[10px] font-bold bg-white border border-gray-200 px-1.5 py-0.5 rounded text-gray-500">#{report.trackingId}</span>
                     </div>
                     <p className="text-xs text-gray-500 mb-2 line-clamp-1">{report.address}</p>
-                    <button 
+                    <button
                       onClick={() => handleAcceptCase(report)}
                       disabled={acceptingReportId === report.id}
                       className="w-full py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors opacity-90 hover:opacity-100 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"

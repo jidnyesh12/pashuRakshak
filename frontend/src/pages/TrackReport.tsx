@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { Search, Filter, MapPin, Calendar, FileText, Building2, UserPlus, X, User } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -15,14 +15,18 @@ import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// ... (imports)
+import { socketService } from '../utils/socket';
+
+// ... (inside component)
 const TrackReport: React.FC = () => {
   const { user } = useAuth();
   const [reports, setReports] = useState<AnimalReport[]>([]);
@@ -31,15 +35,17 @@ const TrackReport: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
 
-  // Worker assignment state
+  // State for worker assignment
   const [workers, setWorkers] = useState<UserResponse[]>([]);
   const [selectedReport, setSelectedReport] = useState<AnimalReport | null>(null);
   const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
+  const [workerLocations, setWorkerLocations] = useState<Record<string, { lat: number; lng: number }>>({});
 
   // Check user role
   const isNGO = user?.roles?.includes('NGO');
+  const isWorker = user?.roles?.includes('NGO_WORKER');
   const isAdmin = user?.roles?.includes('ADMIN');
 
   useEffect(() => {
@@ -51,8 +57,11 @@ const TrackReport: React.FC = () => {
       setIsLoading(true);
       let data: AnimalReport[];
 
-      if (isNGO && user?.ngoId) {
-        // For NGO users, fetch reports assigned to their NGO
+      if (isWorker && user?.id) {
+        // For Workers, fetch only their assigned tasks
+        data = await reportsAPI.getWorkerTasks(user.id);
+      } else if (isNGO && user?.ngoId) {
+        // For NGO users (Admins), fetch reports assigned to their NGO
         data = await reportsAPI.getReportsByNgo(user.ngoId);
       } else if (isAdmin) {
         // For admin, get all reports using admin API (bypasses user filtering)
@@ -72,12 +81,12 @@ const TrackReport: React.FC = () => {
   };
 
   const filteredReports = reports.filter((report) => {
-    const matchesSearch = 
+    const matchesSearch =
       report.animalType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.trackingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (report.injuryDescription && report.injuryDescription.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (report.description && report.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesFilter = filterStatus === 'ALL' || report.status === filterStatus;
 
     return matchesSearch && matchesFilter;
@@ -176,25 +185,23 @@ const TrackReport: React.FC = () => {
           </div>
           <p className="text-gray-600 mt-1">{getPageDescription()}</p>
         </div>
-        
+
         <div className="flex bg-gray-100 p-1 rounded-lg">
           <button
             onClick={() => setViewMode('list')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-              viewMode === 'list' 
-                ? 'bg-white text-purple-600 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${viewMode === 'list'
+              ? 'bg-white text-purple-600 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             List View
           </button>
           <button
             onClick={() => setViewMode('map')}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-              viewMode === 'map' 
-                ? 'bg-white text-purple-600 shadow-sm' 
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${viewMode === 'map'
+              ? 'bg-white text-purple-600 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             Map View
           </button>
@@ -270,24 +277,24 @@ const TrackReport: React.FC = () => {
                 {isNGO ? 'No cases assigned yet' : 'No reports found'}
               </h3>
               <p className="text-gray-500 mt-1">
-                {isNGO 
+                {isNGO
                   ? 'Accept cases from the dashboard to see them here'
                   : 'Try adjusting your search or filters'}
               </p>
             </div>
           ) : (
             filteredReports.map((report) => (
-              <div 
-                key={report.id} 
+              <div
+                key={report.id}
                 className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
               >
                 <div className="flex flex-col md:flex-row gap-6">
                   {/* Image */}
                   <div className="w-full md:w-48 h-48 md:h-32 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                     {report.imageUrls?.[0] ? (
-                      <img 
-                        src={report.imageUrls[0]} 
-                        alt={report.animalType} 
+                      <img
+                        src={report.imageUrls[0]}
+                        alt={report.animalType}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -376,9 +383,9 @@ const TrackReport: React.FC = () => {
         </div>
       ) : (
         <div className="h-[600px] bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative z-0">
-          <MapContainer 
-            center={[20.5937, 78.9629]} 
-            zoom={5} 
+          <MapContainer
+            center={[20.5937, 78.9629]}
+            zoom={5}
             style={{ height: '100%', width: '100%' }}
           >
             <TileLayer
@@ -387,8 +394,8 @@ const TrackReport: React.FC = () => {
             />
             {filteredReports.map((report) => (
               report.latitude && report.longitude && (
-                <Marker 
-                  key={report.id} 
+                <Marker
+                  key={report.id}
                   position={[report.latitude, report.longitude]}
                 >
                   <Popup>
@@ -406,6 +413,48 @@ const TrackReport: React.FC = () => {
                 </Marker>
               )
             ))}
+
+            {/* Render Live Worker Locations */}
+            {reports.map(report => {
+              const liveLoc = workerLocations[report.trackingId];
+              if (liveLoc) {
+                return (
+                  <React.Fragment key={`worker-${report.trackingId}`}>
+                    {/* Worker Marker */}
+                    <Marker
+                      position={[liveLoc.lat, liveLoc.lng]}
+                      icon={new L.Icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                      })}
+                    >
+                      <Popup>
+                        <div className="p-1">
+                          <p className="font-bold text-blue-700 text-xs mb-0">Live Worker Location</p>
+                          <p className="text-xs text-gray-500">Approaching Case #{report.trackingId}</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+
+                    {/* Dotted Line connecting Worker to Animal */}
+                    {report.latitude && report.longitude && (
+                      <Polyline
+                        positions={[
+                          [liveLoc.lat, liveLoc.lng],
+                          [report.latitude, report.longitude]
+                        ]}
+                        pathOptions={{ color: 'blue', dashArray: '10, 10', opacity: 0.6 }}
+                      />
+                    )}
+                  </React.Fragment>
+                );
+              }
+              return null;
+            })}
           </MapContainer>
         </div>
       )}
@@ -468,11 +517,10 @@ const TrackReport: React.FC = () => {
                     {workers.map((worker) => (
                       <label
                         key={worker.id}
-                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                          selectedWorkerId === worker.id
-                            ? 'border-purple-500 bg-purple-50'
-                            : 'border-gray-100 hover:border-purple-200 hover:bg-purple-50/50'
-                        }`}
+                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedWorkerId === worker.id
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-100 hover:border-purple-200 hover:bg-purple-50/50'
+                          }`}
                       >
                         <input
                           type="radio"

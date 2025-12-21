@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Eye, EyeOff, ArrowRight, User, Mail, Phone, Lock, UserCircle, FileText } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, User, Mail, Phone, Lock, UserCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authAPI } from '../../utils/api';
 import type { SignupRequest } from '../../types';
