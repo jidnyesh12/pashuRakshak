@@ -4,14 +4,14 @@ import { reportsAPI } from '../../utils/api';
 import type { AnimalReport } from '../../types';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { MapPin, Calendar, AlertTriangle, CheckCircle, Navigation, Locate } from 'lucide-react';
+import { MapPin, Clock, AlertTriangle, Navigation, Locate, CheckCircle2, Circle, ArrowRight, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { socketService } from '../../utils/socket';
 
-// Fix for default marker icons in React-Leaflet
+// Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -19,81 +19,62 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom icons
 const workerIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
 });
 
 const animalIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
 });
+
+// Fallback images for animals
+const animalImages: Record<string, string> = {
+    'dog': 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&q=80',
+    'cat': 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&q=80',
+    'bird': 'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&q=80',
+    'cow': 'https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=400&q=80',
+    'default': 'https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=400&q=80'
+};
 
 const WorkerDashboard: React.FC = () => {
     const { user } = useAuth();
     const [tasks, setTasks] = useState<AnimalReport[]>([]);
     const [loading, setLoading] = useState(true);
+    const [mounted, setMounted] = useState(false);
     const [workerLocation, setWorkerLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [locationLoading, setLocationLoading] = useState(false);
     const [isTracking, setIsTracking] = useState(false);
+    const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
     useEffect(() => {
-        // Connect to WebSocket
         socketService.connect();
-
-        return () => {
-            socketService.disconnect();
-        };
+        const timer = setTimeout(() => setMounted(true), 100);
+        return () => { socketService.disconnect(); clearTimeout(timer); };
     }, []);
 
-    // Effect to track and broadcast location
     useEffect(() => {
         let watchId: number;
-
         if (navigator.geolocation && user?.id) {
             setIsTracking(true);
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
                     setWorkerLocation({ lat: latitude, lng: longitude });
-
-                    // Broadcast location for all active tasks
-                    // In a real app, you might want to only broadcast for the *currently active* task or have the backend handle fan-out
-                    // For this demo, we'll broadcast to all non-resolved tasks assigned to this worker
-                    const activeTasks = tasks.filter(t => t.status !== 'CASE_RESOLVED');
-                    activeTasks.forEach(task => {
+                    tasks.filter(t => t.status !== 'CASE_RESOLVED').forEach(task => {
                         socketService.send('/app/location.update', {
-                            trackingId: task.trackingId,
-                            workerId: user.id,
-                            latitude: latitude,
-                            longitude: longitude
+                            trackingId: task.trackingId, workerId: user.id, latitude, longitude
                         });
                     });
                 },
-                (error) => {
-                    console.error('Error watching location:', error);
-                    setIsTracking(false);
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
+                () => setIsTracking(false),
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         }
-
-        return () => {
-            if (watchId) navigator.geolocation.clearWatch(watchId);
-        };
+        return () => { if (watchId) navigator.geolocation.clearWatch(watchId); };
     }, [tasks, user]);
 
     useEffect(() => {
@@ -103,358 +84,221 @@ const WorkerDashboard: React.FC = () => {
                     const data = await reportsAPI.getWorkerTasks(user.id);
                     setTasks(data);
                 }
-            } catch (error) {
-                console.error('Failed to load tasks', error);
-                toast.error('Failed to load assigned tasks');
-            } finally {
-                setLoading(false);
-            }
+            } catch { toast.error('Failed to load tasks'); }
+            finally { setLoading(false); }
         };
-
         fetchTasks();
     }, [user]);
 
+    const getAnimalImage = (task: AnimalReport): string => {
+        if (task.imageUrls?.[0]) return task.imageUrls[0];
+        return animalImages[task.animalType?.toLowerCase()] || animalImages.default;
+    };
+
     const getWorkerLocation = () => {
         setLocationLoading(true);
-        if (!navigator.geolocation) {
-            toast.error('Geolocation is not supported by your browser');
-            setLocationLoading(false);
-            return;
-        }
-
         navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setWorkerLocation({
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                });
-                toast.success('Location updated');
-                setLocationLoading(false);
-            },
-            (error) => {
-                console.error(error);
-                toast.error('Unable to retrieve your location');
-                setLocationLoading(false);
-            }
+            (pos) => { setWorkerLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }); toast.success('Location updated'); setLocationLoading(false); },
+            () => { toast.error('Unable to get location'); setLocationLoading(false); }
         );
     };
 
-    const openGoogleMaps = (targetLat: number, targetLng: number) => {
-        if (!workerLocation) {
-            // If we don't have worker location, just open map to target
-            window.open(`https://www.google.com/maps/search/?api=1&query=${targetLat},${targetLng}`, '_blank');
-        } else {
-            // If we have both, provide directions
-            window.open(`https://www.google.com/maps/dir/?api=1&origin=${workerLocation.lat},${workerLocation.lng}&destination=${targetLat},${targetLng}&travelmode=driving`, '_blank');
-        }
+    const openGoogleMaps = (lat: number, lng: number) => {
+        const url = workerLocation
+            ? `https://www.google.com/maps/dir/?api=1&origin=${workerLocation.lat},${workerLocation.lng}&destination=${lat},${lng}&travelmode=driving`
+            : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        window.open(url, '_blank');
     };
 
     const handleStatusUpdate = async (trackingId: string, newStatus: string) => {
-        if (newStatus === 'CASE_RESOLVED') {
-            const confirmed = window.confirm('Are you sure you want to mark this case as resolved? This will move it to your history.');
-            if (!confirmed) return;
-        }
-
+        if (newStatus === 'CASE_RESOLVED' && !window.confirm('Mark as resolved?')) return;
+        setUpdatingStatus(trackingId);
         try {
             await reportsAPI.updateReportStatus(trackingId, newStatus);
-            toast.success('Status updated successfully');
-            // Refresh tasks
-            if (user?.id) {
-                const data = await reportsAPI.getWorkerTasks(user.id);
-                setTasks(data);
-            }
-        } catch (error) {
-            toast.error('Failed to update status');
-        }
+            toast.success('Status updated');
+            if (user?.id) setTasks(await reportsAPI.getWorkerTasks(user.id));
+        } catch { toast.error('Update failed'); }
+        finally { setUpdatingStatus(null); }
     };
 
+    const getTimeSince = (date: string): string => {
+        const hours = Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60));
+        if (hours < 1) return 'Just now';
+        if (hours < 24) return `${hours}h ago`;
+        return `${Math.floor(hours / 24)}d ago`;
+    };
+
+    const activeTasks = tasks.filter(t => t.status !== 'CASE_RESOLVED');
+    const resolvedTasks = tasks.filter(t => t.status === 'CASE_RESOLVED');
+    const urgentTasks = activeTasks.filter(t => (Date.now() - new Date(t.createdAt).getTime()) / (1000 * 60 * 60) > 2 || t.status === 'SUBMITTED');
+
     if (loading) {
-        return (
-            <DashboardLayout title="Worker Dashboard" role="NGO_WORKER">
-                <LoadingSpinner />
-            </DashboardLayout>
-        );
+        return <DashboardLayout><div className="flex justify-center items-center h-[60vh]"><LoadingSpinner size="lg" /></div></DashboardLayout>;
     }
 
     return (
-        <DashboardLayout title="My Assigned Tasks" role="NGO_WORKER">
-            <div className="space-y-6">
-                {/* Live Tracking Indicator */}
-                {isTracking && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-blue-700">
-                            <span className="relative flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-                            </span>
-                            <span className="text-sm font-medium">Live Location Broadcast Active</span>
-                        </div>
-                        <span className="text-xs text-blue-500">Your location is being shared with NGOs and Users</span>
-                    </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="bg-[#004432]/5 p-6 rounded-2xl border border-[#004432]/10">
-                        <h3 className="text-[#004432] font-bold text-lg mb-1">Total Assigned</h3>
-                        <p className="text-3xl font-extrabold text-[#004432]">{tasks.length}</p>
-                    </div>
-                    <div className="bg-[#e6ce00]/10 p-6 rounded-2xl border border-[#e6ce00]/20">
-                        <h3 className="text-yellow-800 font-bold text-lg mb-1">Pending</h3>
-                        <p className="text-3xl font-extrabold text-yellow-900">
-                            {tasks.filter(t => t.status !== 'CASE_RESOLVED').length}
-                        </p>
-                    </div>
-                    <div className="bg-[#13735f]/5 p-6 rounded-2xl border border-[#13735f]/10">
-                        <h3 className="text-[#13735f] font-bold text-lg mb-1">Completed</h3>
-                        <p className="text-3xl font-extrabold text-[#13735f]">
-                            {tasks.filter(t => t.status === 'CASE_RESOLVED').length}
-                        </p>
-                    </div>
-                </div>
-
-                {tasks.some(t => t.status !== 'CASE_RESOLVED') && (
-                    <div className="mt-8 mb-4 animate-pulse">
-                        <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-xl shadow-sm relative overflow-hidden">
-                            <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 bg-red-500 rounded-full opacity-10 blur-xl"></div>
-                            <div className="flex items-start gap-4 z-10 relative">
-                                <div className="p-3 bg-red-100 rounded-full text-red-600 flex-shrink-0">
-                                    <AlertTriangle className="h-6 w-6" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-lg font-bold text-red-800 mb-1">Action Required!</h3>
-                                    <p className="text-red-700 mb-3">
-                                        You have pending assignments. Please attend to the latest case immediately.
-                                    </p>
-
-                                    {(() => {
-                                        const latestTask = tasks.filter(t => t.status !== 'CASE_RESOLVED').sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-                                        if (!latestTask) return null;
-
-                                        return (
-                                            <div className="bg-white p-4 rounded-lg border border-red-100 shadow-sm flex flex-col md:flex-row gap-4">
-                                                <img
-                                                    src={latestTask.imageUrls?.[0] || 'https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?wx=500&q=80'}
-                                                    alt="Latest Task"
-                                                    className="w-full md:w-32 h-32 object-cover rounded-md"
-                                                />
-                                                <div>
-                                                    <div className='flex items-center gap-2 mb-1'>
-                                                        <span className="font-bold text-gray-900 uppercase">{latestTask.animalType}</span>
-                                                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">#{latestTask.trackingId}</span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">{latestTask.condition}</p>
-                                                    <div className='flex items-center gap-4 text-xs text-gray-500'>
-                                                        <span className='flex items-center gap-1'><MapPin className="h-3 w-3" /> {latestTask.address}</span>
-                                                        <span className='flex items-center gap-1'><Calendar className="h-3 w-3" /> {new Date(latestTask.createdAt).toLocaleDateString()}</span>
-                                                    </div>
-                                                    <div className="mt-3">
-                                                        <button onClick={() => {
-                                                            const element = document.getElementById(`task-${latestTask.id}`);
-                                                            if (element) element.scrollIntoView({ behavior: 'smooth' });
-                                                        }} className="text-sm font-bold text-red-600 hover:text-red-800 flex items-center gap-1">
-                                                            Jump to Case <Navigation className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
-                                </div>
+        <DashboardLayout>
+            <div className="max-w-6xl mx-auto font-['Inter',system-ui,sans-serif]">
+                
+                {/* Operational Overview Strip */}
+                <section className={`mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+                    <div className="flex items-center justify-between py-5 px-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                        <div className="flex items-center gap-10">
+                            <div className="text-center">
+                                <p className="text-3xl font-bold text-slate-900">{tasks.length}</p>
+                                <p className="text-sm text-slate-400">Total</p>
+                            </div>
+                            <div className="w-px h-10 bg-slate-100" />
+                            <div className="text-center">
+                                <p className="text-3xl font-bold text-emerald-600">{activeTasks.length}</p>
+                                <p className="text-sm text-slate-400">Active</p>
+                            </div>
+                            <div className="w-px h-10 bg-slate-100" />
+                            <div className="text-center">
+                                <p className="text-3xl font-bold text-slate-400">{resolvedTasks.length}</p>
+                                <p className="text-sm text-slate-400">Resolved</p>
                             </div>
                         </div>
+                        {isTracking && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full text-sm text-emerald-600">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                                </span>
+                                <span className="font-medium">Live</span>
+                            </div>
+                        )}
                     </div>
+                </section>
+
+                {/* Action Required */}
+                {urgentTasks.length > 0 && (
+                    <section className={`mb-8 transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-5 border border-amber-100">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="animate-pulse"><AlertTriangle className="w-5 h-5 text-amber-600" /></div>
+                                <h2 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Action Required</h2>
+                            </div>
+                            <div className="space-y-2">
+                                {urgentTasks.slice(0, 2).map(task => (
+                                    <div key={task.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-amber-100">
+                                        <div className="flex items-center gap-3">
+                                            <img src={getAnimalImage(task)} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                                            <div>
+                                                <p className="font-semibold text-slate-900 capitalize">{task.animalType?.toLowerCase()} <span className="text-amber-600 text-sm">#{task.trackingId}</span></p>
+                                                <p className="text-sm text-slate-500 flex items-center gap-2">
+                                                    <MapPin className="w-3 h-3" />{task.address?.split(',')[0]}
+                                                    <Clock className="w-3 h-3 ml-2" />{getTimeSince(task.createdAt)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => document.getElementById(`task-${task.id}`)?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-semibold text-amber-700 hover:text-amber-900 flex items-center gap-1">
+                                            View <ArrowRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
                 )}
 
-                <h2 className="text-xl font-bold text-gray-900 mt-8 mb-4">Current Assignments</h2>
+                {/* Current Assignments */}
+                <section className={`mb-10 transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <h2 className="text-lg font-bold text-slate-900 mb-6">Current Assignments</h2>
 
-                {tasks.filter(t => t.status !== 'CASE_RESOLVED').length === 0 ? (
-                    <div className="bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-sm">
-                        <p className="text-gray-500">No active tasks assigned.</p>
-                    </div>
-                ) : (
-                    <div className="grid gap-6">
-                        {tasks.filter(t => t.status !== 'CASE_RESOLVED').map((task) => (
-                            <div key={task.id} id={`task-${task.id}`} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                                <div className="flex flex-col md:flex-row gap-6">
-                                    <div className="w-full md:w-1/3">
-                                        <img
-                                            src={task.imageUrls[0]}
-                                            alt={task.animalType}
-                                            className="w-full h-48 object-cover rounded-xl"
-                                        />
-                                    </div>
-                                    <div className="flex-1 space-y-4">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#004432]/10 text-[#004432]">
-                                                        {task.animalType}
-                                                    </span>
-                                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${task.status === 'CASE_RESOLVED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                                                        }`}>
-                                                        {task.status.replace(/_/g, ' ')}
-                                                    </span>
-                                                </div>
-                                                <h3 className="text-lg font-bold text-gray-900">Case #{task.trackingId}</h3>
-                                            </div>
-                                            <div className="text-sm text-gray-500 flex items-center gap-1">
-                                                <Calendar className="h-4 w-4" />
-                                                {new Date(task.createdAt).toLocaleDateString()}
+                    {activeTasks.length === 0 ? (
+                        <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
+                            <CheckCircle2 className="w-12 h-12 text-emerald-200 mx-auto mb-4" />
+                            <p className="text-slate-500">No active assignments</p>
+                            <p className="text-sm text-slate-400 mt-1">You're all caught up!</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            {activeTasks.map(task => (
+                                <div key={task.id} id={`task-${task.id}`} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-24 hover:shadow-md transition-shadow">
+                                    <div className="flex flex-col lg:flex-row">
+                                        {/* Image Section */}
+                                        <div className="lg:w-72 h-56 lg:h-auto relative flex-shrink-0">
+                                            <img src={getAnimalImage(task)} alt={task.animalType} className="w-full h-full object-cover" />
+                                            <div className="absolute top-4 left-4">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                    task.status === 'HELP_ON_THE_WAY' ? 'bg-blue-500 text-white' :
+                                                    task.status === 'ANIMAL_RESCUED' ? 'bg-purple-500 text-white' :
+                                                    'bg-amber-500 text-white'
+                                                }`}>
+                                                    {task.status?.replace(/_/g, ' ')}
+                                                </span>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                                            <div className="flex items-start gap-2">
-                                                <MapPin className="h-4 w-4 mt-1 text-gray-400" />
-                                                <span>{task.address}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <AlertTriangle className="h-4 w-4 text-red-400" />
-                                                <span className="font-medium text-red-600">{task.condition}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Map Section - Only show if coordinates exist and not resolved */}
-                                        {task.latitude && task.longitude && (
-                                            <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 shadow-sm relative z-0">
-                                                <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex justify-between items-center">
-                                                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Live Location Tracking</span>
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={getWorkerLocation}
-                                                            className="text-xs flex items-center gap-1 bg-white border border-gray-300 px-2 py-1 rounded hover:bg-gray-50 transition-colors"
-                                                            disabled={locationLoading}
-                                                        >
-                                                            <Locate className="h-3 w-3" />
-                                                            {locationLoading ? 'Locating...' : 'My Location'}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => openGoogleMaps(task.latitude, task.longitude)}
-                                                            className="text-xs flex items-center gap-1 bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors"
-                                                        >
-                                                            <Navigation className="h-3 w-3" />
-                                                            Navigate
-                                                        </button>
+                                        {/* Content Section */}
+                                        <div className="flex-1 p-6">
+                                            <div className="flex items-start justify-between mb-4">
+                                                <div>
+                                                    <div className="flex items-center gap-3 mb-1">
+                                                        <h3 className="text-xl font-bold text-slate-900 capitalize">{task.animalType?.toLowerCase()}</h3>
+                                                        <span className="text-sm font-mono text-slate-400">#{task.trackingId}</span>
                                                     </div>
+                                                    <p className="text-slate-500 flex items-center gap-1.5">
+                                                        <MapPin className="w-4 h-4 text-emerald-500" />
+                                                        {task.address}
+                                                    </p>
                                                 </div>
-                                                <div className="h-64 w-full">
-                                                    <MapContainer
-                                                        center={[task.latitude, task.longitude]}
-                                                        zoom={13}
-                                                        style={{ height: '100%', width: '100%' }}
-                                                    >
-                                                        <TileLayer
-                                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                                        />
-                                                        {/* Target (Animal) Marker */}
-                                                        <Marker position={[task.latitude, task.longitude]} icon={animalIcon}>
-                                                            <Popup>
-                                                                <b>{task.animalType}</b><br />
-                                                                {task.condition}<br />
-                                                                {task.address}
-                                                            </Popup>
-                                                        </Marker>
+                                                <div className="text-right">
+                                                    <p className="text-sm text-slate-400">Assigned {getTimeSince(task.createdAt)}</p>
+                                                </div>
+                                            </div>
 
-                                                        {/* Worker Marker */}
+                                            {task.condition && (
+                                                <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-amber-50 rounded-lg text-amber-700 text-sm font-medium">
+                                                    <AlertTriangle className="w-4 h-4" />
+                                                    {task.condition}
+                                                </div>
+                                            )}
+
+                                            {/* Map Preview */}
+                                            {task.latitude && task.longitude && (
+                                                <div className="h-64 rounded-xl overflow-hidden border border-slate-100 mb-4">
+                                                    <MapContainer center={[task.latitude, task.longitude]} zoom={14} style={{ height: '100%', width: '100%' }} zoomControl={false}>
+                                                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                                        <Marker position={[task.latitude, task.longitude]} icon={animalIcon}><Popup>{task.address}</Popup></Marker>
                                                         {workerLocation && (
                                                             <>
-                                                                <Marker position={[workerLocation.lat, workerLocation.lng]} icon={workerIcon}>
-                                                                    <Popup>You are here</Popup>
-                                                                </Marker>
-                                                                {/* Line connecting them */}
-                                                                <Polyline
-                                                                    positions={[
-                                                                        [workerLocation.lat, workerLocation.lng],
-                                                                        [task.latitude, task.longitude]
-                                                                    ]}
-                                                                    pathOptions={{ color: 'blue', dashArray: '10, 10', opacity: 0.6 }}
-                                                                />
+                                                                <Marker position={[workerLocation.lat, workerLocation.lng]} icon={workerIcon}><Popup>You</Popup></Marker>
+                                                                <Polyline positions={[[workerLocation.lat, workerLocation.lng], [task.latitude, task.longitude]]} pathOptions={{ color: '#10b981', dashArray: '8, 8', opacity: 0.7 }} />
                                                             </>
                                                         )}
                                                     </MapContainer>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
 
-                                        <div className="bg-gray-50 p-4 rounded-xl">
-                                            <p className="text-sm text-gray-600 mb-2 font-medium">Update Status:</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                <button
-                                                    onClick={() => handleStatusUpdate(task.trackingId, 'HELP_ON_THE_WAY')}
-                                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${task.status === 'HELP_ON_THE_WAY'
-                                                        ? 'bg-blue-600 text-white'
-                                                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                                                        }`}
-                                                >
-                                                    On The Way
+                                            {/* Actions Row */}
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                {task.latitude && task.longitude && (
+                                                    <button onClick={() => openGoogleMaps(task.latitude, task.longitude)} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors">
+                                                        <Navigation className="w-4 h-4" /> Navigate
+                                                    </button>
+                                                )}
+                                                <button onClick={getWorkerLocation} disabled={locationLoading} className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors">
+                                                    <Locate className="w-4 h-4" /> {locationLoading ? 'Locating...' : 'My Location'}
                                                 </button>
-                                                <button
-                                                    onClick={() => handleStatusUpdate(task.trackingId, 'ANIMAL_RESCUED')}
-                                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${task.status === 'ANIMAL_RESCUED'
-                                                        ? 'bg-purple-600 text-white'
-                                                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                                                        }`}
-                                                >
-                                                    Rescued
-                                                </button>
-                                                <button
-                                                    onClick={() => handleStatusUpdate(task.trackingId, 'CASE_RESOLVED')}
-                                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${task.status === 'CASE_RESOLVED'
-                                                        ? 'bg-green-600 text-white'
-                                                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                                                        }`}
-                                                >
-                                                    Resolved
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
 
-                {/* Task History Section */}
-                {tasks.filter(t => t.status === 'CASE_RESOLVED').length > 0 && (
-                    <>
-                        <h2 className="text-xl font-bold text-gray-900 mt-12 mb-4">Task History</h2>
-                        <div className="grid gap-6 opacity-75">
-                            {tasks.filter(t => t.status === 'CASE_RESOLVED').map((task) => (
-                                <div key={task.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                                    <div className="flex flex-col md:flex-row gap-6">
-                                        <div className="w-full md:w-1/4">
-                                            <img
-                                                src={task.imageUrls[0]}
-                                                alt={task.animalType}
-                                                className="w-full h-32 object-cover rounded-xl grayscale"
-                                            />
-                                        </div>
-                                        <div className="flex-1 space-y-2">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#004432]/10 text-[#004432]">
-                                                            RESOLVED
-                                                        </span>
-                                                    </div>
-                                                    <h3 className="text-lg font-bold text-gray-900">Case #{task.trackingId}</h3>
-                                                </div>
-                                                <div className="text-sm text-gray-500 flex items-center gap-1">
-                                                    <CheckCircle className="h-4 w-4 text-green-500" />
-                                                    Resolved on {new Date(task.updatedAt || task.createdAt).toLocaleDateString()}
-                                                </div>
-                                            </div>
+                                                <div className="flex-1" />
 
-                                            <div className="text-sm text-gray-600">
-                                                <div className="flex items-start gap-2 mb-1">
-                                                    <MapPin className="h-4 w-4 mt-1 text-gray-400" />
-                                                    <span>{task.address}</span>
-                                                </div>
+                                                {/* Status Buttons */}
                                                 <div className="flex items-center gap-2">
-                                                    <AlertTriangle className="h-4 w-4 text-gray-400" />
-                                                    <span className="text-gray-600">{task.condition}</span>
+                                                    <button onClick={() => handleStatusUpdate(task.trackingId, 'HELP_ON_THE_WAY')} disabled={updatingStatus === task.trackingId}
+                                                        className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${task.status === 'HELP_ON_THE_WAY' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-300'}`}>
+                                                        On the way
+                                                    </button>
+                                                    <button onClick={() => handleStatusUpdate(task.trackingId, 'ANIMAL_RESCUED')} disabled={updatingStatus === task.trackingId}
+                                                        className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${task.status === 'ANIMAL_RESCUED' ? 'bg-purple-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-purple-300'}`}>
+                                                        Rescued
+                                                    </button>
+                                                    <button onClick={() => handleStatusUpdate(task.trackingId, 'CASE_RESOLVED')} disabled={updatingStatus === task.trackingId}
+                                                        className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${task.status === 'CASE_RESOLVED' ? 'bg-emerald-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-emerald-300'}`}>
+                                                        Resolved
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -462,7 +306,46 @@ const WorkerDashboard: React.FC = () => {
                                 </div>
                             ))}
                         </div>
-                    </>
+                    )}
+                </section>
+
+                {/* Task History Section */}
+                {resolvedTasks.length > 0 && (
+                    <section className={`transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="h-px flex-1 bg-slate-100" />
+                            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Completed Tasks</h2>
+                            <div className="h-px flex-1 bg-slate-100" />
+                        </div>
+
+                        <div className="space-y-4">
+                            {resolvedTasks.slice(0, 5).map(task => (
+                                <div key={task.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+                                    <img src={getAnimalImage(task)} alt="" className="w-14 h-14 rounded-lg object-cover grayscale opacity-70" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold text-slate-700 capitalize">{task.animalType?.toLowerCase()}</span>
+                                            <span className="text-sm text-slate-400">#{task.trackingId}</span>
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                        </div>
+                                        <p className="text-sm text-slate-400 truncate">{task.address}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-slate-400 flex items-center gap-1">
+                                            <Calendar className="w-3.5 h-3.5" />
+                                            {new Date(task.updatedAt || task.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {resolvedTasks.length > 5 && (
+                            <p className="text-center text-sm text-slate-400 mt-4">
+                                + {resolvedTasks.length - 5} more completed tasks
+                            </p>
+                        )}
+                    </section>
                 )}
             </div>
         </DashboardLayout>

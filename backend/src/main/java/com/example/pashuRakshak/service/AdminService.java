@@ -2,7 +2,9 @@ package com.example.pashuRakshak.service;
 
 import com.example.pashuRakshak.dto.DashboardStatsResponse;
 import com.example.pashuRakshak.dto.NgoStatsResponse;
+import com.example.pashuRakshak.dto.ReportResponse;
 import com.example.pashuRakshak.dto.UserStatsResponse;
+import com.example.pashuRakshak.entity.AnimalReport;
 import com.example.pashuRakshak.entity.ReportStatus;
 import com.example.pashuRakshak.entity.User;
 import com.example.pashuRakshak.entity.UserRole;
@@ -14,8 +16,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
@@ -31,6 +35,9 @@ public class AdminService {
 
     @Autowired
     private NgoService ngoService;
+
+    @Autowired
+    private EmailService emailService;
 
     /**
      * Get comprehensive dashboard statistics
@@ -91,6 +98,47 @@ public class AdminService {
             user.setEnabled(true);
             user.setUpdatedAt(LocalDateTime.now());
             userRepository.save(user);
+
+            // Send approval notification email
+            try {
+                emailService.sendNgoRepresentativeApprovalEmail(user.getEmail(), user.getFullName());
+            } catch (Exception e) {
+                // Log but don't fail if email fails
+                System.err.println("Failed to send approval email: " + e.getMessage());
+            }
+
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Reject NGO representative - delete user or keep disabled with notification
+     */
+    public boolean rejectNgoRepresentative(Long userId, String reason) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+
+            // Check if user has NGO role
+            if (!user.getRoles().contains(UserRole.NGO)) {
+                return false; // User is not an NGO representative
+            }
+
+            // Send rejection notification email before deleting
+            try {
+                emailService.sendNgoRepresentativeRejectionEmail(
+                        user.getEmail(),
+                        user.getFullName(),
+                        reason != null ? reason : "Your registration did not meet our requirements.");
+            } catch (Exception e) {
+                // Log but don't fail if email fails
+                System.err.println("Failed to send rejection email: " + e.getMessage());
+            }
+
+            // Delete the user account
+            userRepository.delete(user);
+
             return true;
         }
         return false;
@@ -103,5 +151,40 @@ public class AdminService {
         return userRepository.findAll().stream()
                 .filter(user -> user.getRoles().contains(UserRole.NGO) && !user.isEnabled())
                 .count();
+    }
+
+    /**
+     * Get reports by status for admin filtering
+     */
+    public List<ReportResponse> getReportsByStatus(ReportStatus status) {
+        List<AnimalReport> reports = reportRepository.findByStatus(status);
+        return reports.stream()
+                .map(this::convertToReportResponse)
+                .collect(Collectors.toList());
+    }
+
+    private ReportResponse convertToReportResponse(AnimalReport report) {
+        ReportResponse response = new ReportResponse();
+        response.setId(report.getId());
+        response.setTrackingId(report.getTrackingId());
+        response.setAnimalType(report.getAnimalType());
+        response.setCondition(report.getCondition());
+        response.setInjuryDescription(report.getInjuryDescription());
+        response.setAdditionalNotes(report.getAdditionalNotes());
+        response.setLatitude(report.getLatitude());
+        response.setLongitude(report.getLongitude());
+        response.setAddress(report.getAddress());
+        response.setImageUrls(report.getImageUrls());
+        response.setStatus(report.getStatus());
+        response.setReporterName(report.getReporterName());
+        response.setReporterPhone(report.getReporterPhone());
+        response.setReporterEmail(report.getReporterEmail());
+        response.setCreatedAt(report.getCreatedAt());
+        response.setUpdatedAt(report.getUpdatedAt());
+        response.setAssignedNgoId(report.getAssignedNgoId());
+        response.setAssignedNgoName(report.getAssignedNgoName());
+        response.setAssignedWorkerId(report.getAssignedWorkerId());
+        response.setAssignedWorkerName(report.getAssignedWorkerName());
+        return response;
     }
 }

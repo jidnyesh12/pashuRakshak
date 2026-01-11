@@ -1,50 +1,78 @@
 import React from 'react';
-import { Bell, Menu, Phone } from 'lucide-react';
+import { Menu, Circle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLocation } from 'react-router-dom';
 
 interface TopHeaderProps {
   onMenuClick: () => void;
+  isSidebarExpanded?: boolean;
 }
 
 const TopHeader: React.FC<TopHeaderProps> = ({ onMenuClick }) => {
   const { user } = useAuth();
+  const location = useLocation();
+
+  // Get greeting based on time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  // Get page title from route
+  const getPageInfo = () => {
+    const path = location.pathname;
+    if (path.includes('dashboard')) return { title: 'Dashboard', subtitle: 'Overview' };
+    if (path.includes('report-animal')) return { title: 'Report', subtitle: 'New case' };
+    if (path.includes('track-report')) return { title: 'Cases', subtitle: 'Track history' };
+    if (path.includes('profile')) return { title: 'Profile', subtitle: 'Settings' };
+    if (path.includes('manage-ngo')) return { title: 'NGO', subtitle: 'Management' };
+    return { title: 'Dashboard', subtitle: '' };
+  };
+
+  const pageInfo = getPageInfo();
 
   return (
-    <header className="bg-white shadow-sm h-16 fixed top-0 right-0 left-0 lg:left-64 z-10 transition-all duration-300">
-      <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Left: Mobile Menu & Title */}
-        <div className="flex items-center">
+    <header 
+      className={`
+        bg-white/80 backdrop-blur-sm h-16 fixed top-0 right-0 z-30 
+        transition-all duration-300 ease-out border-b border-slate-100/80
+        left-0 lg:left-16
+      `}
+    >
+      <div className="h-full px-6 lg:px-8 flex items-center justify-between">
+        {/* Left: Mobile Menu + Page Context */}
+        <div className="flex items-center gap-4">
           <button
             onClick={onMenuClick}
-            className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500 lg:hidden"
+            className="p-2 -ml-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors lg:hidden"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-5 w-5" />
           </button>
-          <h1 className="ml-4 text-xl font-semibold text-gray-800 hidden sm:block">
-            Dashboard
-          </h1>
+          
+          {/* Page Context - Desktop only */}
+          <div className="hidden lg:flex items-center gap-3">
+            <span className="text-slate-300 text-sm">{getGreeting()}</span>
+            <span className="text-slate-200">·</span>
+            <span className="text-slate-900 font-medium">{pageInfo.title}</span>
+          </div>
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center space-x-4">
-          {/* Emergency Button */}
-          <a
-            href="tel:112"
-            className="hidden sm:flex items-center px-4 py-2 bg-red-50 text-red-600 rounded-full text-sm font-medium hover:bg-red-100 transition-colors animate-pulse"
-          >
-            <Phone className="h-4 w-4 mr-2" />
-            Emergency: 112
-          </a>
-
-          {/* Notifications */}
-          <button className="p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative">
-            <Bell className="h-6 w-6" />
-            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-          </button>
-
-          {/* Role Badge */}
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#e6ce00]/20 text-[#004432] border border-[#e6ce00]/30 capitalize">
-            {user?.roles?.[0]?.toLowerCase() || 'User'}
+        {/* Right: Status + User */}
+        <div className="flex items-center gap-3">
+          {/* Online Status Indicator */}
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400">
+            <Circle className="w-2 h-2 fill-emerald-500 text-emerald-500" />
+            <span>Online</span>
+          </div>
+          
+          {/* Divider */}
+          <div className="hidden sm:block w-px h-4 bg-slate-200" />
+          
+          {/* User Name (shortened) */}
+          <span className="text-sm text-slate-600 font-medium hidden sm:block">
+            {user?.fullName?.split(' ')[0]}
           </span>
         </div>
       </div>

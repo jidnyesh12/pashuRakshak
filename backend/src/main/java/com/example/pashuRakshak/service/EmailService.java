@@ -61,6 +61,37 @@ public class EmailService {
         sendHtmlEmail(toEmail, subject, "Welcome Aboard", content);
     }
 
+    public void sendNgoRepresentativeApprovalEmail(String toEmail, String fullName) {
+        String subject = "Pashu Rakshak - NGO Representative Account Approved";
+        String content = "<p>Dear <strong>" + fullName + "</strong>,</p>" +
+                "<p>Congratulations! Your NGO Representative account on Pashu Rakshak has been approved.</p>" +
+                "<p>You can now log in to your dashboard and start managing your NGO operations:</p>" +
+                "<ul>" +
+                "<li>Accept and manage animal rescue reports</li>" +
+                "<li>Assign workers to tasks</li>" +
+                "<li>Track case progress</li>" +
+                "<li>Manage your NGO profile</li>" +
+                "</ul>" +
+                "<p>Thank you for joining our mission to protect animals.</p>";
+
+        sendHtmlEmail(toEmail, subject, "Account Approved", content);
+    }
+
+    public void sendNgoRepresentativeRejectionEmail(String toEmail, String fullName, String reason) {
+        String subject = "Pashu Rakshak - NGO Representative Application Update";
+        String content = "<p>Dear <strong>" + fullName + "</strong>,</p>" +
+                "<p>We regret to inform you that your NGO Representative application on Pashu Rakshak has been declined.</p>"
+                +
+                "<div style=\"background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 4px;\">"
+                +
+                "<strong style=\"color: #b91c1c;\">Reason:</strong> <span style=\"color: #7f1d1d;\">" + reason
+                + "</span>" +
+                "</div>" +
+                "<p>If you believe this is an error or if you have addressed the issues, please register again with corrected details or contact our support team.</p>";
+
+        sendHtmlEmail(toEmail, subject, "Application Status", content);
+    }
+
     private void sendHtmlEmail(String to, String subject, String title, String bodyContent) {
         try {
             MimeMessage message = mailSender.createMimeMessage();

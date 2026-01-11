@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Calendar, Shield, Save, Lock } from 'lucide-react';
+import { Mail, Phone, Calendar, Shield, CheckCircle2, Lock, Edit3, X, Check } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
@@ -12,15 +12,14 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserType | null>(null);
   const [ngoDetails, setNgoDetails] = useState<NGO | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
+  // Inline editing states
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  
+  // Password form
   const [showPasswordForm, setShowPasswordForm] = useState(false);
-
-  const [profileForm, setProfileForm] = useState({
-    fullName: '',
-    email: '',
-    phone: ''
-  });
-
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -29,6 +28,7 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     loadProfile();
+    setTimeout(() => setMounted(true), 100);
   }, []);
 
   const loadProfile = async () => {
@@ -36,11 +36,6 @@ const Profile: React.FC = () => {
       setLoading(true);
       const data = await userAPI.getProfile();
       setProfileData(data);
-      setProfileForm({
-        fullName: data.fullName,
-        email: data.email,
-        phone: data.phone || ''
-      });
 
       // Fetch NGO details if user is an NGO
       if (data.roles.includes('NGO') || data.roles.includes('NGO_WORKER')) {
@@ -49,7 +44,6 @@ const Profile: React.FC = () => {
           if (data.ngoId) {
             ngoData = await ngoAPI.getNgoById(data.ngoId);
           } else {
-            // Fallback to email if ngoId is missing (legacy support)
             ngoData = await ngoAPI.getNgoByEmail(data.email);
           }
           setNgoDetails(ngoData);
@@ -64,17 +58,39 @@ const Profile: React.FC = () => {
     }
   };
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const startEditing = (field: string, currentValue: string) => {
+    setEditingField(field);
+    setEditValue(currentValue || '');
+  };
+
+  const cancelEditing = () => {
+    setEditingField(null);
+    setEditValue('');
+  };
+
+  const saveField = async (field: string) => {
+    if (!editValue.trim()) {
+      toast.error('Value cannot be empty');
+      return;
+    }
+
     try {
       setLoading(true);
-      const updatedUser = await userAPI.updateProfile(profileForm);
+      const updateData = {
+        fullName: profileData?.fullName || '',
+        email: profileData?.email || '',
+        phone: profileData?.phone || '',
+        [field]: editValue
+      };
+      
+      const updatedUser = await userAPI.updateProfile(updateData);
       setProfileData(updatedUser);
       updateUser(updatedUser);
-      setIsEditing(false);
-      toast.success('Profile updated successfully');
+      setEditingField(null);
+      setEditValue('');
+      toast.success('Updated successfully');
     } catch (error) {
-      toast.error('Failed to update profile');
+      toast.error('Failed to update');
     } finally {
       setLoading(false);
     }
@@ -85,6 +101,11 @@ const Profile: React.FC = () => {
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       toast.error('New passwords do not match');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
       return;
     }
 
@@ -101,6 +122,27 @@ const Profile: React.FC = () => {
     }
   };
 
+  const getMemberSince = () => {
+    if (!profileData?.createdAt) return 'Recently';
+    const date = new Date(profileData.createdAt);
+    const now = new Date();
+    const months = (now.getFullYear() - date.getFullYear()) * 12 + (now.getMonth() - date.getMonth());
+    if (months < 1) return 'This month';
+    if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`;
+    const years = Math.floor(months / 12);
+    return `${years} year${years > 1 ? 's' : ''} ago`;
+  };
+
+  const getRoleLabel = () => {
+    const role = profileData?.roles?.[0];
+    switch (role) {
+      case 'ADMIN': return 'Administrator';
+      case 'NGO': return 'NGO Representative';
+      case 'NGO_WORKER': return 'Field Worker';
+      default: return 'Guardian';
+    }
+  };
+
   if (loading && !profileData) {
     return (
       <DashboardLayout>
@@ -113,303 +155,331 @@ const Profile: React.FC = () => {
 
   return (
     <DashboardLayout>
-      {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-600 to-indigo-600 p-8 mb-10 text-white shadow-xl">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white opacity-10 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-64 w-64 rounded-full bg-purple-400 opacity-10 blur-3xl"></div>
-
-        <div className="relative z-10 flex items-center gap-6">
-          <div className="h-24 w-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl font-bold border-4 border-white/30 shadow-inner">
-            {profileData?.fullName?.charAt(0) || 'U'}
+      <div className="max-w-3xl mx-auto font-['Inter',system-ui,sans-serif]">
+        
+        {/* Banner Header */}
+        <div 
+          className={`relative overflow-hidden rounded-2xl mb-12 transition-all duration-700 ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+          }`}
+        >
+          {/* Gradient Banner */}
+          <div className="h-32 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 relative rounded-2xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 to-transparent rounded-2xl" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -mr-32 -mt-32" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold mb-1">{profileData?.fullName}</h1>
-            <p className="text-purple-100 flex items-center gap-2">
-              <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
-                {profileData?.roles?.[0] || 'User'}
-              </span>
-              <span className="text-sm opacity-80">
-                Member since {new Date(profileData?.createdAt || '').getFullYear()}
-              </span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Profile Summary */}
-        <div className="lg:col-span-1 space-y-6">
-
-          {/* NGO Details Card - Only for NGO users */}
-          {ngoDetails && (
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-purple-100 bg-purple-50/30">
-              <h3 className="font-bold text-lg text-purple-900 mb-4 flex items-center gap-2">
-                <Shield className="h-5 w-5 text-purple-600" />
-                NGO Organization
-              </h3>
-              <div className="space-y-4">
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-purple-100">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Organization Name</p>
-                  <p className="font-bold text-gray-900 text-lg">{ngoDetails.name}</p>
+          
+          {/* Profile Card - Overlaps Banner */}
+          <div className="relative -mt-12 mx-6">
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="flex items-center gap-5">
+                {/* Avatar */}
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-3xl font-bold text-white shadow-lg flex-shrink-0">
+                  {profileData?.fullName?.charAt(0) || 'U'}
                 </div>
-
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-purple-100">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">NGO ID</p>
-                  <div className="flex items-center gap-2">
-                    <code className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-mono font-bold">
-                      {ngoDetails.uniqueId || 'Generating...'}
-                    </code>
-                    {ngoDetails.verificationStatus === 'APPROVED' && (
-                      <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                        Verified
-                      </span>
+                
+                <div className="flex-1 min-w-0">
+                  {/* Name */}
+                  <h1 className="text-xl font-bold text-slate-900 truncate">
+                    {profileData?.fullName}
+                  </h1>
+                  
+                  {/* Role */}
+                  <p className="text-slate-500 text-sm mt-0.5">
+                    {getRoleLabel()}
+                  </p>
+                  
+                  {/* Trust Badges */}
+                  <div className="flex items-center gap-3 mt-3 flex-wrap">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>Verified email</span>
+                    </div>
+                    <div className="w-1 h-1 rounded-full bg-slate-300" />
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Member since {getMemberSince()}</span>
+                    </div>
+                    {ngoDetails?.verificationStatus === 'APPROVED' && (
+                      <>
+                        <div className="w-1 h-1 rounded-full bg-slate-300" />
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-600">
+                          <Shield className="w-3.5 h-3.5" />
+                          <span>Verified NGO</span>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 text-sm text-gray-600 px-1">
-                  <span className={`w-2 h-2 rounded-full ${ngoDetails.isActive ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                  Status: <span className="font-medium">{ngoDetails.isActive ? 'Active' : 'Inactive'}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="font-bold text-gray-900 mb-4">Contact Details</h3>
-            <div className="space-y-4">
-              <div className="flex items-center p-3 bg-gray-50 rounded-xl">
-                <div className="p-2 bg-white rounded-lg mr-3 shadow-sm">
-                  <Mail className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Email Address</p>
-                  <p className="text-sm font-medium text-gray-900 break-all">{profileData?.email}</p>
-                </div>
-              </div>
-              <div className="flex items-center p-3 bg-gray-50 rounded-xl">
-                <div className="p-2 bg-white rounded-lg mr-3 shadow-sm">
-                  <Phone className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Phone Number</p>
-                  <p className="text-sm font-medium text-gray-900">{profileData?.phone || 'Not provided'}</p>
-                </div>
-              </div>
-              <div className="flex items-center p-3 bg-gray-50 rounded-xl">
-                <div className="p-2 bg-white rounded-lg mr-3 shadow-sm">
-                  <Calendar className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Joined On</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {new Date(profileData?.createdAt || '').toLocaleDateString()}
-                  </p>
-                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column - Forms */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Edit Profile */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <User className="h-5 w-5 text-purple-600" />
-                Personal Information
-              </h2>
-              {!isEditing && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-sm font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 px-3 py-1.5 rounded-lg transition-colors"
-                >
-                  Edit Details
-                </button>
-              )}
-            </div>
-
-            <div className="p-6">
-              {isEditing ? (
-                <form onSubmit={handleUpdateProfile} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                      <input
-                        type="text"
-                        value={profileForm.fullName}
-                        onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                      <input
-                        type="tel"
-                        value={profileForm.phone}
-                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                      <input
-                        type="email"
-                        value={profileForm.email}
-                        onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditing(false);
-                        setProfileForm({
-                          fullName: profileData?.fullName || '',
-                          email: profileData?.email || '',
-                          phone: profileData?.phone || ''
-                        });
-                      }}
-                      className="px-4 py-2 text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-medium"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium flex items-center shadow-sm shadow-purple-200"
-                    >
-                      {loading ? <LoadingSpinner size="sm" /> : <Save className="h-4 w-4 mr-2" />}
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Content Sections */}
+        <div 
+          className={`space-y-12 transition-all duration-700 delay-200 ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          }`}
+        >
+          
+          {/* NGO Information - Only for NGO users */}
+          {ngoDetails && (
+            <section>
+              <div className="flex items-center gap-3 mb-6">
+                <Shield className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Organization</h2>
+              </div>
+              
+              <div className="space-y-5">
+                <div className="flex items-center justify-between py-4 border-b border-slate-100">
                   <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Full Name</p>
-                    <p className="text-gray-900 font-medium">{profileData?.fullName}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Phone Number</p>
-                    <p className="text-gray-900 font-medium">{profileData?.phone || 'Not provided'}</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Email Address</p>
-                    <p className="text-gray-900 font-medium">{profileData?.email}</p>
+                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Organization Name</p>
+                    <p className="text-slate-900 font-medium">{ngoDetails.name}</p>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
+                
+                <div className="flex items-center justify-between py-4 border-b border-slate-100">
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">NGO ID</p>
+                    <code className="text-slate-900 font-mono text-sm">{ngoDetails.uniqueId || 'Generating...'}</code>
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    ngoDetails.isActive 
+                      ? 'bg-emerald-50 text-emerald-700' 
+                      : 'bg-red-50 text-red-700'
+                  }`}>
+                    {ngoDetails.isActive ? 'Active' : 'Inactive'}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
 
-          {/* Security Settings */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Shield className="h-5 w-5 text-purple-600" />
-                Security Settings
-              </h2>
-              {!showPasswordForm && (
+          {/* Personal Information */}
+          <section>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px flex-1 bg-slate-100" />
+              <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Personal Information</h2>
+              <div className="h-px flex-1 bg-slate-100" />
+            </div>
+            
+            <div className="space-y-1">
+              {/* Full Name - Inline Editable */}
+              <div className="group flex items-center justify-between py-5 border-b border-slate-100 hover:bg-slate-50/50 -mx-4 px-4 rounded-lg transition-colors">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-emerald-600">{profileData?.fullName?.charAt(0) || 'U'}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Full Name</p>
+                    {editingField === 'fullName' ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="flex-1 px-3 py-2 border-b-2 border-emerald-500 bg-transparent text-slate-900 font-medium focus:outline-none"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => saveField('fullName')}
+                          disabled={loading}
+                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                        >
+                          <Check className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-slate-900 font-medium">{profileData?.fullName}</p>
+                    )}
+                  </div>
+                </div>
+                {editingField !== 'fullName' && (
+                  <button
+                    onClick={() => startEditing('fullName', profileData?.fullName || '')}
+                    className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Email */}
+              <div className="flex items-center justify-between py-5 border-b border-slate-100 -mx-4 px-4">
+                <div className="flex items-center gap-4">
+                  <Mail className="w-5 h-5 text-slate-300 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Email Address</p>
+                    <p className="text-slate-900 font-medium">{profileData?.email}</p>
+                  </div>
+                </div>
+                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+              </div>
+
+              {/* Phone - Inline Editable */}
+              <div className="group flex items-center justify-between py-5 border-b border-slate-100 hover:bg-slate-50/50 -mx-4 px-4 rounded-lg transition-colors">
+                <div className="flex items-center gap-4 flex-1">
+                  <Phone className="w-5 h-5 text-slate-300 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Phone Number</p>
+                    {editingField === 'phone' ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="tel"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="flex-1 px-3 py-2 border-b-2 border-emerald-500 bg-transparent text-slate-900 focus:outline-none"
+                          autoFocus
+                          placeholder="Enter phone number"
+                        />
+                        <button
+                          onClick={() => saveField('phone')}
+                          disabled={loading}
+                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                        >
+                          <Check className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <p className={profileData?.phone ? 'text-slate-900' : 'text-slate-400 italic'}>
+                        {profileData?.phone || 'Not provided'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {editingField !== 'phone' && (
+                  <button
+                    onClick={() => startEditing('phone', profileData?.phone || '')}
+                    className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Member Since */}
+              <div className="flex items-center justify-between py-5 -mx-4 px-4">
+                <div className="flex items-center gap-4">
+                  <Calendar className="w-5 h-5 text-slate-300 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Joined</p>
+                    <p className="text-slate-900 font-medium">
+                      {new Date(profileData?.createdAt || '').toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Security - Minimal and Calm */}
+          <section className="pb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px flex-1 bg-slate-100" />
+              <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Security</h2>
+              <div className="h-px flex-1 bg-slate-100" />
+            </div>
+            
+            {showPasswordForm ? (
+              <form onSubmit={handleChangePassword} className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs text-slate-400 uppercase tracking-wider mb-2">
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-slate-400 focus:ring-0 outline-none transition-colors text-slate-900"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-slate-400 uppercase tracking-wider mb-2">
+                        New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={passwordForm.newPassword}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-slate-400 focus:ring-0 outline-none transition-colors text-slate-900"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-400 uppercase tracking-wider mb-2">
+                        Confirm Password
+                      </label>
+                      <input
+                        type="password"
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-slate-400 focus:ring-0 outline-none transition-colors text-slate-900"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {loading && <LoadingSpinner size="sm" variant="white" />}
+                    Update Password
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordForm(false);
+                      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                    }}
+                    className="px-6 py-3 text-slate-600 hover:bg-slate-100 rounded-xl font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex items-center justify-between py-5 -mx-4 px-4 hover:bg-slate-50/50 rounded-lg transition-colors group">
+                <div className="flex items-center gap-4">
+                  <Lock className="w-5 h-5 text-slate-300" />
+                  <div>
+                    <p className="text-slate-900 font-medium">Password</p>
+                    <p className="text-sm text-slate-400">Last changed recently</p>
+                  </div>
+                </div>
                 <button
                   onClick={() => setShowPasswordForm(true)}
-                  className="text-sm font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 px-3 py-1.5 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg font-medium transition-colors"
                 >
-                  Change Password
+                  Change
                 </button>
-              )}
-            </div>
-
-            <div className="p-6">
-              {showPasswordForm ? (
-                <form onSubmit={handleChangePassword} className="space-y-4">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                          type="password"
-                          value={passwordForm.currentPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                          className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <input
-                            type="password"
-                            value={passwordForm.newPassword}
-                            onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <input
-                            type="password"
-                            value={passwordForm.confirmPassword}
-                            onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowPasswordForm(false);
-                        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                      }}
-                      className="px-4 py-2 text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-medium"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium flex items-center shadow-sm shadow-purple-200"
-                    >
-                      {loading ? <LoadingSpinner size="sm" /> : <Shield className="h-4 w-4 mr-2" />}
-                      Update Password
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white rounded-lg shadow-sm">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Password</p>
-                      <p className="text-xs text-gray-500">Last changed recently</p>
-                    </div>
-                  </div>
-                  <div className="text-gray-400 font-mono text-sm">••••••••</div>
-                </div>
-              )}
-            </div>
-          </div>
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </DashboardLayout>

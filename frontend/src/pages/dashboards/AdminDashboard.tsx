@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Building2, FileText, TrendingUp, Trash2, UserPlus, UserMinus, UserCheck } from 'lucide-react';
+import { Users, Building2, FileText, TrendingUp, Trash2, UserPlus, UserMinus, Download } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import NgoManagement from '../../components/admin/NgoManagement';
 // import { useAuth } from '../../context/AuthContext';
-import { userAPI, reportsAPI, ngoAPI } from '../../utils/api';
+import { userAPI, ngoAPI, adminAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import type { User, AnimalReport } from '../../types';
 
 const AdminDashboard: React.FC = () => {
     // const { user } = useAuth();
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'overview' | 'ngos' | 'users' | 'reports' | 'ngo-reps'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'ngos' | 'users' | 'reports'>('overview');
     const [users, setUsers] = useState<User[]>([]);
     const [reports, setReports] = useState<AnimalReport[]>([]);
-    const [ngoRepresentatives, setNgoRepresentatives] = useState<User[]>([]);
     const [stats, setStats] = useState({
         totalUsers: 0,
         totalReports: 0,
@@ -28,24 +27,23 @@ const AdminDashboard: React.FC = () => {
 
     const loadDashboardData = async () => {
         try {
-            const [usersData, reportsData, ngosData, ngoRepsData] = await Promise.all([
+            const [usersData, reportsData, ngosData] = await Promise.all([
                 userAPI.getAllUsers(),
-                reportsAPI.getAllReports(),
-                ngoAPI.getAllNgos(),
-                userAPI.getPendingNgoRepresentatives()
+                adminAPI.getAllReports(),  // Use adminAPI to get ALL reports, not user-filtered
+                ngoAPI.getAllNgosAdmin()   // Use getAllNgosAdmin to get ALL NGOs including inactive
             ]);
 
             setUsers(usersData);
             setReports(reportsData);
-            setNgoRepresentatives(ngoRepsData);
 
             setStats({
                 totalUsers: usersData.length,
                 totalReports: reportsData.length,
                 totalNgos: ngosData.length,
-                activeReports: reportsData.filter(r => !['CASE_RESOLVED'].includes(r.status)).length
+                activeReports: reportsData.filter((r: AnimalReport) => !['CASE_RESOLVED'].includes(r.status)).length
             });
         } catch (error) {
+            console.error('Failed to load dashboard data:', error);
             toast.error('Failed to load dashboard data');
         } finally {
             setLoading(false);
@@ -71,6 +69,38 @@ const AdminDashboard: React.FC = () => {
             } catch (error) {
                 toast.error('Failed to delete user');
             }
+        }
+    };
+
+
+
+    const handleExport = async (type: 'reports' | 'users' | 'ngos') => {
+        try {
+            let blob: Blob;
+            let filename: string;
+            const timestamp = new Date().toISOString().slice(0, 10);
+
+            switch (type) {
+                case 'reports':
+                    blob = await adminAPI.exportReports();
+                    filename = `reports_${timestamp}.csv`;
+                    break;
+                case 'users':
+                    blob = await adminAPI.exportUsers();
+                    filename = `users_${timestamp}.csv`;
+                    break;
+                case 'ngos':
+                    blob = await adminAPI.exportNgos();
+                    filename = `ngos_${timestamp}.csv`;
+                    break;
+                default:
+                    throw new Error('Invalid export type');
+            }
+
+            adminAPI.downloadFile(blob, filename);
+            toast.success(`Exported ${type} successfully`);
+        } catch (error) {
+            toast.error(`Failed to export ${type}`);
         }
     };
 
@@ -135,16 +165,6 @@ const AdminDashboard: React.FC = () => {
                         >
                             <FileText className="w-5 h-5" />
                             Reports
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('ngo-reps')}
-                            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === 'ngo-reps'
-                                ? 'bg-[#004432] text-white shadow-md'
-                                : 'hover:bg-gray-100 text-gray-600'
-                                }`}
-                        >
-                            <UserCheck className="w-5 h-5" />
-                            NGO Reps
                         </button>
                     </div>
                 </div>
@@ -218,7 +238,16 @@ const AdminDashboard: React.FC = () => {
                 {activeTab === 'users' && (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200">
                         <div className="p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">User Management</h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
+                                <button
+                                    onClick={() => handleExport('users')}
+                                    className="px-4 py-2 bg-[#004432] text-white rounded-lg hover:bg-[#003326] transition-colors flex items-center gap-2"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Export CSV
+                                </button>
+                            </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
@@ -231,56 +260,64 @@ const AdminDashboard: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {users.map((u) => (
-                                            <tr key={u.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                                <td className="py-3 px-4">{u.username}</td>
-                                                <td className="py-3 px-4">{u.email}</td>
-                                                <td className="py-3 px-4">
-                                                    <div className="flex gap-1">
-                                                        {u.roles.map((role) => (
-                                                            <span
-                                                                key={role}
-                                                                className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                                                            >
-                                                                {role}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <span
-                                                        className={`px-3 py-1 rounded-full text-xs font-medium ${u.enabled
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-red-100 text-red-800'
-                                                            }`}
-                                                    >
-                                                        {u.enabled ? 'Active' : 'Inactive'}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => handleToggleUserStatus(u.id)}
-                                                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                                                            title={u.enabled ? 'Disable' : 'Enable'}
-                                                        >
-                                                            {u.enabled ? (
-                                                                <UserMinus className="w-4 h-4 text-orange-600" />
-                                                            ) : (
-                                                                <UserPlus className="w-4 h-4 text-green-600" />
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteUser(u.id)}
-                                                            className="p-2 rounded-lg hover:bg-red-50 transition-colors"
-                                                            title="Delete"
-                                                        >
-                                                            <Trash2 className="w-4 h-4 text-red-600" />
-                                                        </button>
-                                                    </div>
+                                        {users.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={5} className="py-8 text-center text-gray-500">
+                                                    No users found
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            users.map((u) => (
+                                                <tr key={u.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                                    <td className="py-3 px-4">{u.username}</td>
+                                                    <td className="py-3 px-4">{u.email}</td>
+                                                    <td className="py-3 px-4">
+                                                        <div className="flex gap-1 flex-wrap">
+                                                            {(Array.isArray(u.roles) ? u.roles : []).map((role) => (
+                                                                <span
+                                                                    key={role}
+                                                                    className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                                                                >
+                                                                    {role}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-3 px-4">
+                                                        <span
+                                                            className={`px-3 py-1 rounded-full text-xs font-medium ${u.enabled
+                                                                ? 'bg-green-100 text-green-800'
+                                                                : 'bg-red-100 text-red-800'
+                                                                }`}
+                                                        >
+                                                            {u.enabled ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-4">
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => handleToggleUserStatus(u.id)}
+                                                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                                                title={u.enabled ? 'Disable' : 'Enable'}
+                                                            >
+                                                                {u.enabled ? (
+                                                                    <UserMinus className="w-4 h-4 text-orange-600" />
+                                                                ) : (
+                                                                    <UserPlus className="w-4 h-4 text-green-600" />
+                                                                )}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteUser(u.id)}
+                                                                className="p-2 rounded-lg hover:bg-red-50 transition-colors"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 className="w-4 h-4 text-red-600" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -291,7 +328,16 @@ const AdminDashboard: React.FC = () => {
                 {activeTab === 'reports' && (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200">
                         <div className="p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">All Animal Reports</h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900">All Animal Reports</h3>
+                                <button
+                                    onClick={() => handleExport('reports')}
+                                    className="px-4 py-2 bg-[#004432] text-white rounded-lg hover:bg-[#003326] transition-colors flex items-center gap-2"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Export CSV
+                                </button>
+                            </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
@@ -305,80 +351,26 @@ const AdminDashboard: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {reports.map((report) => (
-                                            <tr key={report.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                                <td className="py-3 px-4 font-mono text-sm">{report.trackingId}</td>
-                                                <td className="py-3 px-4">{report.animalType}</td>
-                                                <td className="py-3 px-4 text-sm">{report.location || report.address}</td>
-                                                <td className="py-3 px-4">
-                                                    <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                                        {report.status}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4">{report.reporterName}</td>
-                                                <td className="py-3 px-4 text-sm text-gray-600">
-                                                    {new Date(report.createdAt).toLocaleDateString()}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === 'ngo-reps' && (
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                        <div className="p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">NGO Representative Management</h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                                Pending NGO representatives need admin approval to access the system.
-                            </p>
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr className="border-b border-gray-200">
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Username</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Full Name</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Phone</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Created</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {ngoRepresentatives.length === 0 ? (
+                                        {reports.length === 0 ? (
                                             <tr>
-                                                <td colSpan={7} className="py-8 text-center text-gray-500">
-                                                    No pending NGO representatives
+                                                <td colSpan={6} className="py-8 text-center text-gray-500">
+                                                    No reports found
                                                 </td>
                                             </tr>
                                         ) : (
-                                            ngoRepresentatives.map((rep) => (
-                                                <tr key={rep.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                                    <td className="py-3 px-4">{rep.username}</td>
-                                                    <td className="py-3 px-4">{rep.email}</td>
-                                                    <td className="py-3 px-4">{rep.fullName}</td>
-                                                    <td className="py-3 px-4">{rep.phone || 'N/A'}</td>
+                                            reports.map((report) => (
+                                                <tr key={report.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                                    <td className="py-3 px-4 font-mono text-sm">{report.trackingId}</td>
+                                                    <td className="py-3 px-4">{report.animalType}</td>
+                                                    <td className="py-3 px-4 text-sm">{report.location || report.address}</td>
                                                     <td className="py-3 px-4">
-                                                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                                            Pending Approval
+                                                        <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                                            {report.status}
                                                         </span>
                                                     </td>
+                                                    <td className="py-3 px-4">{report.reporterName}</td>
                                                     <td className="py-3 px-4 text-sm text-gray-600">
-                                                        {new Date(rep.createdAt).toLocaleDateString()}
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        <button
-                                                            onClick={() => handleToggleUserStatus(rep.id)}
-                                                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
-                                                            title="Approve and Activate"
-                                                        >
-                                                            <UserCheck className="w-4 h-4" />
-                                                            Approve
-                                                        </button>
+                                                        {new Date(report.createdAt).toLocaleDateString()}
                                                     </td>
                                                 </tr>
                                             ))
