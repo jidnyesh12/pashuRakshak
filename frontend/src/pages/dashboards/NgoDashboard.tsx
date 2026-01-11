@@ -11,10 +11,10 @@ import {
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
-import { reportsAPI } from '../../utils/api';
+import { reportsAPI, ngoAPI } from '../../utils/api';
 import toast from 'react-hot-toast';
 import type { AnimalReport, NGO } from '../../types';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { socketService } from '../../utils/socket';

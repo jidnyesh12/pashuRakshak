@@ -41,7 +41,7 @@ const TrackReport: React.FC = () => {
   const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
-  const [workerLocations, setWorkerLocations] = useState<Record<string, { lat: number; lng: number }>>({});
+  const [workerLocations] = useState<Record<string, { lat: number; lng: number }>>({});
 
   // Check user role
   const isNGO = user?.roles?.includes('NGO');
