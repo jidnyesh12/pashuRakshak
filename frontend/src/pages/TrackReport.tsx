@@ -12,6 +12,7 @@ import L from 'leaflet';
 
 // Fix for default marker icon
 import icon from 'leaflet/dist/images/marker-icon.png';
+// import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 let DefaultIcon = L.icon({
@@ -205,25 +206,23 @@ const TrackReport: React.FC = () => {
                 {filteredReports.length} case{filteredReports.length !== 1 ? 's' : ''} on record
               </p>
             </div>
-            
+
             <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg">
               <button
                 onClick={() => setViewMode('list')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                  viewMode === 'list'
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${viewMode === 'list'
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 Register
               </button>
               <button
                 onClick={() => setViewMode('map')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                  viewMode === 'map'
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${viewMode === 'map'
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 Map
               </button>
@@ -281,7 +280,7 @@ const TrackReport: React.FC = () => {
                 {filteredReports.map((report) => {
                   const isExpanded = expandedRow === report.id;
                   const stageIndex = getStageIndex(report.status);
-                  
+
                   return (
                     <div key={report.id}>
                       {/* Main Row */}
@@ -346,13 +345,12 @@ const TrackReport: React.FC = () => {
 
                       {/* Expanded Content */}
                       <div
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                          isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-                        }`}
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                          }`}
                       >
                         <div className="px-6 pb-6 pt-2 bg-slate-50/50 border-t border-slate-100">
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            
+
                             {/* Timeline */}
                             <div className="lg:col-span-2">
                               <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
@@ -361,27 +359,25 @@ const TrackReport: React.FC = () => {
                               <div className="relative">
                                 {/* Timeline track */}
                                 <div className="absolute left-[7px] top-0 bottom-0 w-0.5 bg-slate-200" />
-                                <div 
+                                <div
                                   className="absolute left-[7px] top-0 w-0.5 bg-emerald-500 transition-all duration-500"
                                   style={{ height: `${((stageIndex + 1) / timelineStages.length) * 100}%` }}
                                 />
-                                
+
                                 <div className="space-y-4">
                                   {timelineStages.slice(0, stageIndex + 1).map((stage, index) => (
                                     <div key={stage.status} className="flex items-start gap-4 relative">
-                                      <div className={`w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center ${
-                                        index <= stageIndex 
-                                          ? 'bg-emerald-500' 
+                                      <div className={`w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center ${index <= stageIndex
+                                          ? 'bg-emerald-500'
                                           : 'bg-slate-200'
-                                      }`}>
+                                        }`}>
                                         {index <= stageIndex && (
                                           <CheckCircle2 className="w-3 h-3 text-white" />
                                         )}
                                       </div>
                                       <div>
-                                        <p className={`text-sm font-medium ${
-                                          index <= stageIndex ? 'text-slate-900' : 'text-slate-400'
-                                        }`}>
+                                        <p className={`text-sm font-medium ${index <= stageIndex ? 'text-slate-900' : 'text-slate-400'
+                                          }`}>
                                           {stage.label}
                                         </p>
                                         {index === stageIndex && report.updatedAt && (
@@ -519,7 +515,7 @@ const TrackReport: React.FC = () => {
             <h3 className="text-lg font-bold text-slate-900 mb-4">
               Assign Worker to Case #{selectedReport.trackingId}
             </h3>
-            
+
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {workers.length === 0 ? (
                 <p className="text-slate-500 text-sm">No workers available</p>
@@ -528,11 +524,10 @@ const TrackReport: React.FC = () => {
                   <button
                     key={worker.id}
                     onClick={() => setSelectedWorkerId(worker.id)}
-                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                      selectedWorkerId === worker.id
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${selectedWorkerId === worker.id
                         ? 'border-emerald-500 bg-emerald-50'
                         : 'border-slate-200 hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     <p className="font-medium text-slate-900">{worker.fullName}</p>
                     <p className="text-sm text-slate-500">{worker.email}</p>
